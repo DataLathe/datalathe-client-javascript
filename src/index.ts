@@ -1,0 +1,24 @@
+export { DatalatheClient } from "./client.js";
+export { DatalatheResultSet } from "./results/result-set.js";
+export { CreateChipCommand } from "./commands/create-chip.js";
+export { GenerateReportCommand } from "./commands/generate-report.js";
+export type { DatalatheCommand } from "./commands/command.js";
+export {
+  DatalatheError,
+  DatalatheApiError,
+  DatalatheStageError,
+} from "./errors.js";
+export {
+  SourceType,
+  ReportType,
+  type SchemaField,
+  type SourceRequest,
+  type Partition,
+  type StageDataRequest,
+  type StageDataResponse,
+  type QueryRequest,
+  type ReportRequest,
+  type ReportResultEntry,
+  type ReportResponse,
+  type DatalatheClientOptions,
+} from "./types.js";

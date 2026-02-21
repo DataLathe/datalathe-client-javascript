@@ -21,4 +21,9 @@ export {
   type ReportResultEntry,
   type ReportResponse,
   type DatalatheClientOptions,
+  type DuckDBDatabase,
+  type DatabaseTable,
+  type Chip,
+  type ChipMetadata,
+  type ChipsResponse,
 } from "./types.js";

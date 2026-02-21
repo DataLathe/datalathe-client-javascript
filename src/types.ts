@@ -68,6 +68,48 @@ export interface ReportResponse {
   error?: string | null;
 }
 
+export interface DuckDBDatabase {
+  database_name: string;
+  database_oid: number;
+  path?: string;
+  comment?: string;
+  tags?: string;
+  internal: boolean;
+  type: string;
+  readonly: boolean;
+}
+
+export interface DatabaseTable {
+  table_name: string;
+  schema_name: string;
+  column_name: string;
+  data_type: string;
+  is_nullable: string;
+  column_default?: string;
+  ordinal_position: number;
+}
+
+export interface Chip {
+  chip_id: string;
+  sub_chip_id: string;
+  table_name: string;
+  partition_value: string;
+  created_at?: number;
+}
+
+export interface ChipMetadata {
+  chip_id: string;
+  query?: string;
+  created_at: number;
+  description: string;
+  name: string;
+}
+
+export interface ChipsResponse {
+  chips: Chip[];
+  metadata: ChipMetadata[];
+}
+
 export interface DatalatheClientOptions {
   /** Custom fetch implementation (for testing or Node 16 polyfill) */
   fetch?: typeof globalThis.fetch;

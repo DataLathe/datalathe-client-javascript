@@ -207,6 +207,123 @@ describe("DatalatheClient", () => {
     );
   });
 
+  it("testGetDatabases", async () => {
+    const databases = [
+      {
+        database_name: "mydb",
+        database_oid: 1,
+        path: "/tmp/mydb",
+        internal: false,
+        type: "datalathe",
+        readonly: false,
+      },
+      {
+        database_name: "system",
+        database_oid: 2,
+        internal: true,
+        type: "duckdb",
+        readonly: true,
+      },
+    ];
+
+    const { fetch, calls } = createMockFetch([
+      { status: 200, body: databases },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    const result = await client.getDatabases();
+
+    expect(result).toEqual(databases);
+    expect(calls).toHaveLength(1);
+    expect(calls[0].url).toBe(
+      "http://localhost:8080/lathe/stage/databases",
+    );
+    expect(calls[0].init.method).toBe("GET");
+  });
+
+  it("testGetDatabaseSchema", async () => {
+    const schema = [
+      {
+        table_name: "users",
+        schema_name: "main",
+        column_name: "id",
+        data_type: "INTEGER",
+        is_nullable: "false",
+        ordinal_position: 1,
+      },
+      {
+        table_name: "users",
+        schema_name: "main",
+        column_name: "name",
+        data_type: "VARCHAR",
+        is_nullable: "true",
+        ordinal_position: 2,
+      },
+    ];
+
+    const { fetch, calls } = createMockFetch([
+      { status: 200, body: schema },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    const result = await client.getDatabaseSchema("mydb");
+
+    expect(result).toEqual(schema);
+    expect(calls).toHaveLength(1);
+    expect(calls[0].url).toBe(
+      "http://localhost:8080/lathe/stage/schema/mydb",
+    );
+    expect(calls[0].init.method).toBe("GET");
+  });
+
+  it("testListChips", async () => {
+    const chipsResponse = {
+      chips: [
+        {
+          chip_id: "chip1",
+          sub_chip_id: "sub1",
+          table_name: "users",
+          partition_value: "default",
+          created_at: 1700000000,
+        },
+      ],
+      metadata: [
+        {
+          chip_id: "chip1",
+          query: "SELECT * FROM users",
+          created_at: 1700000000,
+          description: "User data",
+          name: "users_chip",
+        },
+      ],
+    };
+
+    const { fetch, calls } = createMockFetch([
+      { status: 200, body: chipsResponse },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    const result = await client.listChips();
+
+    expect(result.chips).toHaveLength(1);
+    expect(result.chips[0].chip_id).toBe("chip1");
+    expect(result.metadata).toHaveLength(1);
+    expect(result.metadata[0].name).toBe("users_chip");
+    expect(calls).toHaveLength(1);
+    expect(calls[0].url).toBe("http://localhost:8080/lathe/chips");
+    expect(calls[0].init.method).toBe("GET");
+  });
+
+  it("testGetApiError", async () => {
+    const { fetch } = createMockFetch([
+      { status: 404, body: { error: "Not found" } },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+
+    await expect(client.getDatabases()).rejects.toThrow(DatalatheApiError);
+  });
+
   it("testTrailingSlashStripped", async () => {
     const { fetch, calls } = createMockFetch([
       { status: 200, body: { chip_id: "chip1", error: null } },

@@ -3,8 +3,12 @@ import { GenerateReportCommand } from "./commands/generate-report.js";
 import type { DatalatheCommand } from "./commands/command.js";
 import type {
   SourceRequest,
+  Partition,
   ReportResultEntry,
   DatalatheClientOptions,
+  DuckDBDatabase,
+  DatabaseTable,
+  ChipsResponse,
 } from "./types.js";
 import { SourceType, ReportType } from "./types.js";
 import { DatalatheApiError, DatalatheStageError } from "./errors.js";
@@ -27,16 +31,38 @@ export class DatalatheClient {
    * @param sourceName The name of the source database
    * @param query The SQL query to execute
    * @param tableName The name of the table
+   * @param partition Optional partition configuration
    * @returns The chip ID
    */
   async createChip(
     sourceName: string,
     query: string,
     tableName: string,
+    partition?: Partition,
   ): Promise<string> {
     const chips = await this.createChips([
-      { database_name: sourceName, table_name: tableName, query },
+      { database_name: sourceName, table_name: tableName, query, partition },
     ]);
+    return chips[0];
+  }
+
+  /**
+   * Creates a single chip from a file source (CSV, Parquet, etc.).
+   * @param filePath Path to the file on the server
+   * @param tableName Optional table name for the chip
+   * @param partition Optional partition configuration
+   * @returns The chip ID
+   */
+  async createChipFromFile(
+    filePath: string,
+    tableName?: string,
+    partition?: Partition,
+  ): Promise<string> {
+    const chips = await this.createChips(
+      [{ database_name: "", query: "", file_path: filePath, table_name: tableName, partition }],
+      undefined,
+      SourceType.FILE,
+    );
     return chips[0];
   }
 
@@ -91,6 +117,62 @@ export class DatalatheClient {
     }
 
     return results;
+  }
+
+  /**
+   * Returns the list of databases available in the DuckDB instance.
+   */
+  async getDatabases(): Promise<DuckDBDatabase[]> {
+    return this.get<DuckDBDatabase[]>("/lathe/stage/databases");
+  }
+
+  /**
+   * Returns the schema (tables and columns) for a given database.
+   * @param databaseName The name of the database to inspect
+   */
+  async getDatabaseSchema(databaseName: string): Promise<DatabaseTable[]> {
+    return this.get<DatabaseTable[]>(
+      `/lathe/stage/schema/${encodeURIComponent(databaseName)}`,
+    );
+  }
+
+  /**
+   * Returns all chips and their metadata.
+   */
+  async listChips(): Promise<ChipsResponse> {
+    return this.get<ChipsResponse>("/lathe/chips");
+  }
+
+  /**
+   * Sends a GET request to the Datalathe API.
+   * @param path The API path to request
+   * @returns The parsed JSON response
+   */
+  private async get<T>(path: string): Promise<T> {
+    const url = this.baseUrl + path;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+    try {
+      const response = await this.fetchFn(url, {
+        method: "GET",
+        headers: { ...this.defaultHeaders },
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        const body = await response.text();
+        throw new DatalatheApiError(
+          `GET ${path} failed: ${response.status} ${body}`,
+          response.status,
+          body,
+        );
+      }
+
+      return (await response.json()) as T;
+    } finally {
+      clearTimeout(timeoutId);
+    }
   }
 
   /**

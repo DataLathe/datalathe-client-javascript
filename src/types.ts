@@ -118,3 +118,129 @@ export interface DatalatheClientOptions {
   /** Request timeout in milliseconds (default: 30000) */
   timeout?: number;
 }
+
+// Profiler types
+
+export interface ProfilerTable {
+  table_name: string;
+  estimated_size: number;
+  column_count: number;
+  friendly_name: string;
+  filter: string;
+  schema: string;
+  database_name: string;
+}
+
+export interface ModelerConfig {
+  pct_single_group: number;
+  pct_of_groups: number;
+  majority_count: number;
+  majority_threshold: number;
+}
+
+export interface TyperConfig {
+  date_sample_pct: number;
+  non_zero_time_pct: number;
+}
+
+export interface ProfilerConfig {
+  modeler: ModelerConfig;
+  typer: TyperConfig;
+  mapping_pct: number;
+}
+
+export interface DatalatheConfig {
+  data_path: string;
+  duckdb_connection_string: string;
+  profiler: ProfilerConfig;
+}
+
+// Source file types
+
+export interface SourceColumn {
+  id: number | null;
+  column_name: string;
+  column_name_lowercase: string;
+  source_header_id: number | null;
+  data_type: string | null;
+  possible_key: boolean | null;
+  is_primary_key: boolean | null;
+  source_file_offset: number | null;
+  found_type: string | null;
+  is_populated: boolean | null;
+  is_possible_characteristic: boolean | null;
+}
+
+export interface SourceHeader {
+  id: number | null;
+  header_hash: string;
+  possible_mapping_file: boolean | null;
+}
+
+export interface FoundFile {
+  path: string;
+  found_time: number;
+}
+
+export interface LoadScan {
+  scan_id: number;
+  file_id: number;
+  file_path: string;
+}
+
+export interface LoadError {
+  scan_id: number;
+  file_id: number;
+  line: number;
+  line_byte_position: number;
+  byte_position: number;
+  column_idx: number;
+  column_name: string;
+  error_type: string;
+  csv_line: string;
+  error_message: string;
+  file_path: string;
+  delimiter: string;
+  quote: string;
+  escape: string;
+  newline_delimiter: string;
+  skip_rows: number;
+  has_header: boolean;
+}
+
+export interface DataModelColumn {
+  column_id: number;
+  is_primary_key: boolean | null;
+  is_populated: boolean | null;
+  is_characteristic: boolean | null;
+  found_type: string | null;
+  is_data_date: boolean | null;
+}
+
+export interface SourceFileDetails {
+  file_name: string;
+  source_file_id: number;
+  source_columns: SourceColumn[];
+  source_header: SourceHeader;
+  found_files: FoundFile[];
+  load_scans: LoadScan[];
+  load_errors: LoadError[];
+  data_model_columns: DataModelColumn[];
+}
+
+// Job types
+
+export interface Job {
+  id: string;
+  name: string;
+  status: string;
+  created_at: number;
+  message: string;
+}
+
+// Schema mapping types
+
+export interface SchemaMapping {
+  id: number;
+  columnName: string;
+}

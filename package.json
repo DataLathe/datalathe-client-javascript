@@ -44,6 +44,7 @@
   ],
   "dependencies": {
     "@datalathe/client": "^1.0.0",
-    "@datalathe/tui": "^1.0.0"
+    "@datalathe/tui": "^1.0.0",
+    "@streamparser/json": "^0.0.22"
   }
 }

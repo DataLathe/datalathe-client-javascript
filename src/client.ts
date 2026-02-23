@@ -9,6 +9,11 @@ import type {
   DuckDBDatabase,
   DatabaseTable,
   ChipsResponse,
+  ProfilerTable,
+  DatalatheConfig,
+  SourceFileDetails,
+  Job,
+  SchemaMapping,
 } from "./types.js";
 import { SourceType, ReportType } from "./types.js";
 import { DatalatheApiError, DatalatheStageError } from "./errors.js";
@@ -101,10 +106,11 @@ export class DatalatheClient {
   async generateReport(
     chipIds: string[],
     queries: string[],
+    sourceType: SourceType = SourceType.LOCAL,
   ): Promise<Map<number, ReportResultEntry>> {
     const command = new GenerateReportCommand(
       chipIds,
-      SourceType.LOCAL,
+      sourceType,
       queries,
     );
     const response = await this.sendCommand(command);
@@ -143,6 +149,86 @@ export class DatalatheClient {
     return this.get<ChipsResponse>("/lathe/chips");
   }
 
+  // --- Profiler methods ---
+
+  async getProfilerTables(): Promise<ProfilerTable[]> {
+    return this.get<ProfilerTable[]>("/lathe/profiler/tables");
+  }
+
+  async startProfiler(skipFiles: boolean): Promise<unknown> {
+    return this.get<unknown>(`/lathe/profiler/start/${skipFiles}`);
+  }
+
+  async getTableDescription(tableId: string): Promise<unknown[]> {
+    return this.get<unknown[]>(
+      `/lathe/profiler/table/${encodeURIComponent(tableId)}/describe`,
+    );
+  }
+
+  async getTableData(tableId: string): Promise<unknown[]> {
+    return this.get<unknown[]>(
+      `/lathe/profiler/table/${encodeURIComponent(tableId)}`,
+    );
+  }
+
+  async getTableSourceFiles(tableId: string): Promise<unknown[]> {
+    return this.get<unknown[]>(
+      `/lathe/profiler/table/${encodeURIComponent(tableId)}/source_file`,
+    );
+  }
+
+  async getTableSummary(tableId: string): Promise<unknown> {
+    return this.get<unknown>(
+      `/lathe/profiler/table/${encodeURIComponent(tableId)}/summary`,
+    );
+  }
+
+  async getProfilerConfig(): Promise<DatalatheConfig> {
+    return this.get<DatalatheConfig>("/lathe/profiler/config");
+  }
+
+  async updateProfilerConfig(config: DatalatheConfig): Promise<unknown> {
+    return this.post<unknown>("/lathe/profiler/config/update", config);
+  }
+
+  async getSchemaMappings(): Promise<SchemaMapping[]> {
+    return this.get<SchemaMapping[]>("/lathe/profiler/schema/mappings");
+  }
+
+  async getProfilerSchema(request: {
+    show_unpopulated_fields: boolean;
+    mapping_file_source: number | null;
+    mapping_file_target: number | null;
+  }): Promise<unknown> {
+    return this.post<unknown>("/lathe/profiler/schema", request);
+  }
+
+  // --- Source methods ---
+
+  async getSourceFile(fileId: string): Promise<SourceFileDetails> {
+    return this.get<SourceFileDetails>(
+      `/lathe/source/file/${encodeURIComponent(fileId)}`,
+    );
+  }
+
+  // --- Job methods ---
+
+  async getAllJobs(): Promise<Record<string, Job>> {
+    return this.get<Record<string, Job>>("/lathe/jobs/all");
+  }
+
+  // --- Stage data (raw) ---
+
+  async stageData(request: unknown): Promise<unknown> {
+    return this.post<unknown>("/lathe/stage/data", request);
+  }
+
+  // --- Report (raw) ---
+
+  async postReport(request: unknown): Promise<unknown> {
+    return this.post<unknown>("/lathe/report", request);
+  }
+
   /**
    * Sends a GET request to the Datalathe API.
    * @param path The API path to request
@@ -166,6 +252,43 @@ export class DatalatheClient {
           `GET ${path} failed: ${response.status} ${body}`,
           response.status,
           body,
+        );
+      }
+
+      return (await response.json()) as T;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  /**
+   * Sends a POST request to the Datalathe API.
+   * @param path The API path to request
+   * @param body The request body
+   * @returns The parsed JSON response
+   */
+  private async post<T>(path: string, body: unknown): Promise<T> {
+    const url = this.baseUrl + path;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+    try {
+      const response = await this.fetchFn(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...this.defaultHeaders,
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        const responseBody = await response.text();
+        throw new DatalatheApiError(
+          `POST ${path} failed: ${response.status} ${responseBody}`,
+          response.status,
+          responseBody,
         );
       }
 

@@ -16,11 +16,13 @@ export class CreateChipCommand
     sourceType: SourceType,
     source: SourceRequest,
     chipId?: string,
+    chipName?: string,
   ) {
     this.request = {
       source_type: sourceType,
       source_request: source,
       ...(chipId !== undefined ? { chip_id: chipId } : {}),
+      ...(chipName !== undefined ? { chip_name: chipName } : {}),
     };
   }
 

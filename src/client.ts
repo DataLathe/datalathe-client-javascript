@@ -118,11 +118,16 @@ export class DatalatheClient {
     chipIds: string[],
     queries: string[],
     sourceType: SourceType = SourceType.LOCAL,
+    transformQuery?: boolean,
+    returnTransformedQuery?: boolean,
   ): Promise<Map<number, ReportResultEntry>> {
     const command = new GenerateReportCommand(
       chipIds,
       sourceType,
       queries,
+      undefined,
+      transformQuery,
+      returnTransformedQuery,
     );
     const response = await this.sendCommand(command);
     const results = new Map<number, ReportResultEntry>();

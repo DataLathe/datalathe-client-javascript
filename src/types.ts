@@ -54,6 +54,8 @@ export interface ReportRequest {
   source_type: SourceType;
   type: ReportType;
   query_request: QueryRequest;
+  transform_query?: boolean;
+  return_transformed_query?: boolean;
 }
 
 export interface ReportResultEntry {
@@ -62,6 +64,7 @@ export interface ReportResultEntry {
   data?: (string | null)[][] | null;
   error: string | null;
   schema: SchemaField[] | null;
+  transformed_query?: string | null;
 }
 
 export interface ReportResponse {

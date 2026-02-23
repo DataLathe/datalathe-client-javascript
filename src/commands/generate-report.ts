@@ -13,12 +13,16 @@ export class GenerateReportCommand
     sourceType: SourceType,
     queries: string[],
     reportType: ReportType = ReportType.GENERIC,
+    transformQuery?: boolean,
+    returnTransformedQuery?: boolean,
   ) {
     this.request = {
       chip_id: chipIds,
       source_type: sourceType,
       type: reportType,
       query_request: { query: queries },
+      ...(transformQuery !== undefined ? { transform_query: transformQuery } : {}),
+      ...(returnTransformedQuery !== undefined ? { return_transformed_query: returnTransformedQuery } : {}),
     };
   }
 

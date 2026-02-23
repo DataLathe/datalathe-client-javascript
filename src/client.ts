@@ -1,3 +1,4 @@
+import { JSONParser } from "@streamparser/json";
 import { CreateChipCommand } from "./commands/create-chip.js";
 import { GenerateReportCommand } from "./commands/generate-report.js";
 import type { DatalatheCommand } from "./commands/command.js";
@@ -37,6 +38,7 @@ export class DatalatheClient {
    * @param query The SQL query to execute
    * @param tableName The name of the table
    * @param partition Optional partition configuration
+   * @param chipName Optional name for the chip
    * @returns The chip ID
    */
   async createChip(
@@ -44,10 +46,14 @@ export class DatalatheClient {
     query: string,
     tableName: string,
     partition?: Partition,
+    chipName?: string,
   ): Promise<string> {
-    const chips = await this.createChips([
-      { database_name: sourceName, table_name: tableName, query, partition },
-    ]);
+    const chips = await this.createChips(
+      [{ database_name: sourceName, table_name: tableName, query, partition }],
+      undefined,
+      SourceType.MYSQL,
+      chipName,
+    );
     return chips[0];
   }
 
@@ -56,17 +62,20 @@ export class DatalatheClient {
    * @param filePath Path to the file on the server
    * @param tableName Optional table name for the chip
    * @param partition Optional partition configuration
+   * @param chipName Optional name for the chip
    * @returns The chip ID
    */
   async createChipFromFile(
     filePath: string,
     tableName?: string,
     partition?: Partition,
+    chipName?: string,
   ): Promise<string> {
     const chips = await this.createChips(
       [{ database_name: "", query: "", file_path: filePath, table_name: tableName, partition }],
       undefined,
       SourceType.FILE,
+      chipName,
     );
     return chips[0];
   }
@@ -76,16 +85,18 @@ export class DatalatheClient {
    * @param sources List of source requests to process
    * @param chipId Optional chip ID to use
    * @param sourceType Source type (defaults to MYSQL)
+   * @param chipName Optional name for the chip
    * @returns List of chip IDs
    */
   async createChips(
     sources: SourceRequest[],
     chipId?: string,
     sourceType: SourceType = SourceType.MYSQL,
+    chipName?: string,
   ): Promise<string[]> {
     const chipIds: string[] = [];
     for (const source of sources) {
-      const command = new CreateChipCommand(sourceType, source, chipId);
+      const command = new CreateChipCommand(sourceType, source, chipId, chipName);
       const response = await this.sendCommand(command);
       if (response.error) {
         throw new DatalatheStageError(
@@ -230,6 +241,43 @@ export class DatalatheClient {
   }
 
   /**
+   * Parses a JSON response body using streaming to avoid V8's string length limit.
+   * Falls back to response.json() if the body stream is not available.
+   */
+  private async parseJsonStream<T>(response: Response): Promise<T> {
+    const body = response.body;
+    if (!body) {
+      return (await response.json()) as T;
+    }
+
+    return new Promise<T>((resolve, reject) => {
+      const parser = new JSONParser();
+      let result: unknown;
+
+      parser.onValue = ({ value, stack }) => {
+        if (stack.length === 0) {
+          result = value;
+        }
+      };
+      parser.onEnd = () => resolve(result as T);
+      parser.onError = (err: Error) => reject(err);
+
+      const reader = body.getReader();
+      const pump = async () => {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            parser.end();
+            break;
+          }
+          parser.write(value);
+        }
+      };
+      pump().catch(reject);
+    });
+  }
+
+  /**
    * Sends a GET request to the Datalathe API.
    * @param path The API path to request
    * @returns The parsed JSON response
@@ -255,7 +303,7 @@ export class DatalatheClient {
         );
       }
 
-      return (await response.json()) as T;
+      return this.parseJsonStream<T>(response);
     } finally {
       clearTimeout(timeoutId);
     }
@@ -292,7 +340,7 @@ export class DatalatheClient {
         );
       }
 
-      return (await response.json()) as T;
+      return this.parseJsonStream<T>(response);
     } finally {
       clearTimeout(timeoutId);
     }
@@ -330,7 +378,7 @@ export class DatalatheClient {
         );
       }
 
-      const json = await response.json();
+      const json = await this.parseJsonStream(response);
       return command.parseResponse(json);
     } finally {
       clearTimeout(timeoutId);

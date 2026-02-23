@@ -36,6 +36,7 @@ export interface StageDataRequest {
   source_type: SourceType;
   source_request: SourceRequest;
   chip_id?: string;
+  chip_name?: string;
 }
 
 export interface StageDataResponse {

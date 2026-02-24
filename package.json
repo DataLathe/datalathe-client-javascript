@@ -1,6 +1,6 @@
 {
   "name": "@datalathe/client",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "TypeScript client for Datalathe API",
   "type": "module",
   "main": "./dist/index.js",

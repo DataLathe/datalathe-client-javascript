@@ -6,6 +6,7 @@ import type {
   SourceRequest,
   Partition,
   ReportResultEntry,
+  ReportTiming,
   DatalatheClientOptions,
   DuckDBDatabase,
   DatabaseTable,
@@ -16,6 +17,11 @@ import type {
   Job,
   SchemaMapping,
 } from "./types.js";
+
+export interface GenerateReportResult {
+  results: Map<number, ReportResultEntry>;
+  timing: ReportTiming | null;
+}
 import { SourceType, ReportType } from "./types.js";
 import { DatalatheApiError, DatalatheStageError } from "./errors.js";
 
@@ -120,7 +126,7 @@ export class DatalatheClient {
     sourceType: SourceType = SourceType.LOCAL,
     transformQuery?: boolean,
     returnTransformedQuery?: boolean,
-  ): Promise<Map<number, ReportResultEntry>> {
+  ): Promise<GenerateReportResult> {
     const command = new GenerateReportCommand(
       chipIds,
       sourceType,
@@ -138,7 +144,7 @@ export class DatalatheClient {
       }
     }
 
-    return results;
+    return { results, timing: response.timing ?? null };
   }
 
   /**

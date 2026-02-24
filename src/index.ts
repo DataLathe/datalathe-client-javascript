@@ -1,4 +1,5 @@
 export { DatalatheClient } from "./client.js";
+export type { GenerateReportResult } from "./client.js";
 export { DatalatheResultSet } from "./results/result-set.js";
 export { CreateChipCommand } from "./commands/create-chip.js";
 export { GenerateReportCommand } from "./commands/generate-report.js";
@@ -20,6 +21,7 @@ export {
   type ReportRequest,
   type ReportResultEntry,
   type ReportResponse,
+  type ReportTiming,
   type DatalatheClientOptions,
   type DuckDBDatabase,
   type DatabaseTable,

@@ -67,9 +67,16 @@ export interface ReportResultEntry {
   transformed_query?: string | null;
 }
 
+export interface ReportTiming {
+  total_ms: number;
+  chip_attach_ms: number;
+  query_execution_ms: number;
+}
+
 export interface ReportResponse {
   result: Record<string, ReportResultEntry> | null;
   error?: string | null;
+  timing?: ReportTiming | null;
 }
 
 export interface DuckDBDatabase {

@@ -73,7 +73,7 @@ describe("DatalatheClient", () => {
       fetch,
     });
 
-    const results = await client.generateReport(
+    const { results } = await client.generateReport(
       ["chip1", "chip2"],
       ["SELECT * FROM users", "SELECT * FROM orders"],
     );
@@ -132,7 +132,7 @@ describe("DatalatheClient", () => {
       fetch,
     });
 
-    const results = await client.generateReport(
+    const { results } = await client.generateReport(
       ["chip1"],
       ["SELECT * FROM users"],
     );

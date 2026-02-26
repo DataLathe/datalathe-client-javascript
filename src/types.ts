@@ -30,6 +30,7 @@ export interface SourceRequest {
   file_path?: string;
   s3_path?: string;
   partition?: Partition;
+  column_replace?: Record<string, string>;
 }
 
 export interface StageDataRequest {

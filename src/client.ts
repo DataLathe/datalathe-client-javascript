@@ -53,9 +53,10 @@ export class DatalatheClient {
     tableName: string,
     partition?: Partition,
     chipName?: string,
+    columnReplace?: Record<string, string>,
   ): Promise<string> {
     const chips = await this.createChips(
-      [{ database_name: sourceName, table_name: tableName, query, partition }],
+      [{ database_name: sourceName, table_name: tableName, query, partition, column_replace: columnReplace }],
       undefined,
       SourceType.MYSQL,
       chipName,
@@ -76,9 +77,10 @@ export class DatalatheClient {
     tableName?: string,
     partition?: Partition,
     chipName?: string,
+    columnReplace?: Record<string, string>,
   ): Promise<string> {
     const chips = await this.createChips(
-      [{ database_name: "", query: "", file_path: filePath, table_name: tableName, partition }],
+      [{ database_name: "", query: "", file_path: filePath, table_name: tableName, partition, column_replace: columnReplace }],
       undefined,
       SourceType.FILE,
       chipName,

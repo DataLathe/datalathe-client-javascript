@@ -1,6 +1,7 @@
 import type { DatalatheCommand } from "./command.js";
 import type {
   SourceRequest,
+  S3StorageConfig,
   StageDataRequest,
   StageDataResponse,
 } from "../types.js";
@@ -17,12 +18,14 @@ export class CreateChipCommand
     source: SourceRequest,
     chipId?: string,
     chipName?: string,
+    storageConfig?: S3StorageConfig,
   ) {
     this.request = {
       source_type: sourceType,
       source_request: source,
       ...(chipId !== undefined ? { chip_id: chipId } : {}),
       ...(chipName !== undefined ? { chip_name: chipName } : {}),
+      ...(storageConfig !== undefined ? { storage_config: storageConfig } : {}),
     };
   }
 

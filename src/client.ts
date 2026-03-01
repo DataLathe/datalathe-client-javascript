@@ -5,6 +5,7 @@ import type { DatalatheCommand } from "./commands/command.js";
 import type {
   SourceRequest,
   Partition,
+  S3StorageConfig,
   ReportResultEntry,
   ReportTiming,
   DatalatheClientOptions,
@@ -54,12 +55,14 @@ export class DatalatheClient {
     partition?: Partition,
     chipName?: string,
     columnReplace?: Record<string, string>,
+    storageConfig?: S3StorageConfig,
   ): Promise<string> {
     const chips = await this.createChips(
       [{ database_name: sourceName, table_name: tableName, query, partition, column_replace: columnReplace }],
       undefined,
       SourceType.MYSQL,
       chipName,
+      storageConfig,
     );
     return chips[0];
   }
@@ -78,12 +81,14 @@ export class DatalatheClient {
     partition?: Partition,
     chipName?: string,
     columnReplace?: Record<string, string>,
+    storageConfig?: S3StorageConfig,
   ): Promise<string> {
     const chips = await this.createChips(
       [{ database_name: "", query: "", file_path: filePath, table_name: tableName, partition, column_replace: columnReplace }],
       undefined,
       SourceType.FILE,
       chipName,
+      storageConfig,
     );
     return chips[0];
   }
@@ -101,10 +106,11 @@ export class DatalatheClient {
     chipId?: string,
     sourceType: SourceType = SourceType.MYSQL,
     chipName?: string,
+    storageConfig?: S3StorageConfig,
   ): Promise<string[]> {
     const chipIds: string[] = [];
     for (const source of sources) {
-      const command = new CreateChipCommand(sourceType, source, chipId, chipName);
+      const command = new CreateChipCommand(sourceType, source, chipId, chipName, storageConfig);
       const response = await this.sendCommand(command);
       if (response.error) {
         throw new DatalatheStageError(
@@ -171,6 +177,14 @@ export class DatalatheClient {
    */
   async listChips(): Promise<ChipsResponse> {
     return this.get<ChipsResponse>("/lathe/chips");
+  }
+
+  /**
+   * Deletes a chip and its associated data (local files and S3 objects).
+   * @param chipId The ID of the chip to delete
+   */
+  async deleteChip(chipId: string): Promise<void> {
+    return this.delete(`/lathe/chips/${encodeURIComponent(chipId)}`);
   }
 
   // --- Profiler methods ---
@@ -317,6 +331,35 @@ export class DatalatheClient {
       }
 
       return this.parseJsonStream<T>(response);
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  /**
+   * Sends a DELETE request to the Datalathe API.
+   * @param path The API path to request
+   */
+  private async delete(path: string): Promise<void> {
+    const url = this.baseUrl + path;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+    try {
+      const response = await this.fetchFn(url, {
+        method: "DELETE",
+        headers: { ...this.defaultHeaders },
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        const body = await response.text();
+        throw new DatalatheApiError(
+          `DELETE ${path} failed: ${response.status} ${body}`,
+          response.status,
+          body,
+        );
+      }
     } finally {
       clearTimeout(timeoutId);
     }

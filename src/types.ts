@@ -33,11 +33,18 @@ export interface SourceRequest {
   column_replace?: Record<string, string>;
 }
 
+export interface S3StorageConfig {
+  bucket?: string;
+  key_prefix?: string;
+  ttl_days?: number;
+}
+
 export interface StageDataRequest {
   source_type: SourceType;
   source_request: SourceRequest;
   chip_id?: string;
   chip_name?: string;
+  storage_config?: S3StorageConfig;
 }
 
 export interface StageDataResponse {
@@ -115,6 +122,9 @@ export interface ChipMetadata {
   created_at: number;
   description: string;
   name: string;
+  storage_bucket?: string;
+  storage_key_prefix?: string;
+  ttl_days?: number;
 }
 
 export interface ChipsResponse {

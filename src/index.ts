@@ -15,6 +15,7 @@ export {
   type SchemaField,
   type SourceRequest,
   type Partition,
+  type S3StorageConfig,
   type StageDataRequest,
   type StageDataResponse,
   type QueryRequest,

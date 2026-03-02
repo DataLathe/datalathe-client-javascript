@@ -29,6 +29,7 @@ export interface SourceRequest {
   query: string;
   file_path?: string;
   s3_path?: string;
+  source_chip_ids?: string[];
   partition?: Partition;
   column_replace?: Record<string, string>;
 }

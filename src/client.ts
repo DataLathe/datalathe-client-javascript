@@ -94,6 +94,38 @@ export class DatalatheClient {
   }
 
   /**
+   * Creates a new chip from existing chip(s) as the data source.
+   * Optionally transforms the data with a SQL query run against the source chips.
+   * @param sourceChipIds The chip ID(s) to use as source data
+   * @param query Optional SQL query to transform the data (runs against source chip tables)
+   * @param tableName Optional table name for the new chip (defaults to "data")
+   * @param chipName Optional name for the chip
+   * @param storageConfig Optional S3 storage configuration
+   * @returns The new chip ID
+   */
+  async createChipFromChip(
+    sourceChipIds: string[],
+    query?: string,
+    tableName?: string,
+    chipName?: string,
+    storageConfig?: S3StorageConfig,
+  ): Promise<string> {
+    const chips = await this.createChips(
+      [{
+        database_name: "",
+        query: query ?? "",
+        source_chip_ids: sourceChipIds,
+        table_name: tableName,
+      }],
+      undefined,
+      SourceType.CACHE,
+      chipName,
+      storageConfig,
+    );
+    return chips[0];
+  }
+
+  /**
    * Stages data from multiple source requests and returns chip IDs.
    * @param sources List of source requests to process
    * @param chipId Optional chip ID to use

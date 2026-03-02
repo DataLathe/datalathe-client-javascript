@@ -174,7 +174,7 @@ export interface ProfilerConfig {
 
 export interface DatalatheConfig {
   data_path: string;
-  duckdb_connection_string: string;
+  persist_path: string;
   profiler: ProfilerConfig;
 }
 

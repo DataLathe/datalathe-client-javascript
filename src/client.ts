@@ -1,5 +1,6 @@
 import { JSONParser } from "@streamparser/json";
 import { CreateChipCommand } from "./commands/create-chip.js";
+import { ExtractTablesCommand } from "./commands/extract-tables.js";
 import { GenerateReportCommand } from "./commands/generate-report.js";
 import type { DatalatheCommand } from "./commands/command.js";
 import type {
@@ -285,6 +286,26 @@ export class DatalatheClient {
 
   async getAllJobs(): Promise<Record<string, Job>> {
     return this.get<Record<string, Job>>("/lathe/jobs/all");
+  }
+
+  // --- Query analysis ---
+
+  /**
+   * Extracts the list of table names referenced in a SQL query.
+   * @param query The SQL query to analyze
+   * @returns List of table names
+   */
+  async extractTables(query: string): Promise<string[]> {
+    const command = new ExtractTablesCommand(query);
+    const response = await this.sendCommand(command);
+    if (response.error) {
+      throw new DatalatheApiError(
+        `Failed to extract tables: ${response.error}`,
+        400,
+        response.error,
+      );
+    }
+    return response.tables;
   }
 
   // --- Stage data (raw) ---

@@ -140,10 +140,11 @@ export class DatalatheClient {
     sourceType: SourceType = SourceType.MYSQL,
     chipName?: string,
     storageConfig?: S3StorageConfig,
+    tags?: Record<string, string>,
   ): Promise<string[]> {
     const chipIds: string[] = [];
     for (const source of sources) {
-      const command = new CreateChipCommand(sourceType, source, chipId, chipName, storageConfig);
+      const command = new CreateChipCommand(sourceType, source, chipId, chipName, storageConfig, tags);
       const response = await this.sendCommand(command);
       if (response.error) {
         throw new DatalatheStageError(
@@ -210,6 +211,50 @@ export class DatalatheClient {
    */
   async listChips(): Promise<ChipsResponse> {
     return this.get<ChipsResponse>("/lathe/chips");
+  }
+
+  /**
+   * Searches for chips by table name, partition value, and/or tag.
+   * @param tableName Optional table name filter
+   * @param partitionValue Optional partition value filter
+   * @param tag Optional tag filter in "key:value" format
+   * @returns Matching chips and their metadata
+   */
+  async searchChips(
+    tableName?: string,
+    partitionValue?: string,
+    tag?: string,
+  ): Promise<ChipsResponse> {
+    const params = new URLSearchParams();
+    if (tableName !== undefined) params.set("table_name", tableName);
+    if (partitionValue !== undefined) params.set("partition_value", partitionValue);
+    if (tag !== undefined) params.set("tag", tag);
+    const query = params.toString();
+    const path = `/lathe/chips/search${query ? `?${query}` : ""}`;
+    return this.get<ChipsResponse>(path);
+  }
+
+  /**
+   * Adds or updates tags on a chip. Existing keys have their values replaced.
+   * @param chipId The chip ID to tag
+   * @param tags Key-value pairs to set
+   */
+  async addChipTags(
+    chipId: string,
+    tags: Record<string, string>,
+  ): Promise<void> {
+    await this.post(`/lathe/chips/${encodeURIComponent(chipId)}/tags`, { tags });
+  }
+
+  /**
+   * Removes a tag from a chip by key.
+   * @param chipId The chip ID
+   * @param key The tag key to remove
+   */
+  async deleteChipTag(chipId: string, key: string): Promise<void> {
+    return this.delete(
+      `/lathe/chips/${encodeURIComponent(chipId)}/tags/${encodeURIComponent(key)}`,
+    );
   }
 
   /**

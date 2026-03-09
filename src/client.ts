@@ -341,7 +341,22 @@ export class DatalatheClient {
    * @returns List of table names
    */
   async extractTables(query: string): Promise<string[]> {
-    const command = new ExtractTablesCommand(query);
+    const response = await this.extractTablesWithTransform(query);
+    return response.tables;
+  }
+
+  /**
+   * Extracts the list of table names referenced in a SQL query.
+   * Optionally transforms the query from MySQL/MariaDB syntax to DuckDB.
+   * @param query The SQL query to analyze
+   * @param transform When true, also returns the query transformed to DuckDB syntax
+   * @returns Tables and optionally the transformed query
+   */
+  async extractTablesWithTransform(
+    query: string,
+    transform?: boolean,
+  ): Promise<{ tables: string[]; transformed_query: string | null }> {
+    const command = new ExtractTablesCommand(query, transform);
     const response = await this.sendCommand(command);
     if (response.error) {
       throw new DatalatheApiError(
@@ -350,7 +365,7 @@ export class DatalatheClient {
         response.error,
       );
     }
-    return response.tables;
+    return { tables: response.tables, transformed_query: response.transformed_query };
   }
 
   // --- Stage data (raw) ---

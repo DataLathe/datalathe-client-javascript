@@ -19,6 +19,7 @@ export class CreateChipCommand
     chipId?: string,
     chipName?: string,
     storageConfig?: S3StorageConfig,
+    tags?: Record<string, string>,
   ) {
     this.request = {
       source_type: sourceType,
@@ -26,6 +27,7 @@ export class CreateChipCommand
       ...(chipId !== undefined ? { chip_id: chipId } : {}),
       ...(chipName !== undefined ? { chip_name: chipName } : {}),
       ...(storageConfig !== undefined ? { storage_config: storageConfig } : {}),
+      ...(tags !== undefined ? { tags } : {}),
     };
   }
 

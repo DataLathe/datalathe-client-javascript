@@ -46,6 +46,7 @@ export interface StageDataRequest {
   chip_id?: string;
   chip_name?: string;
   storage_config?: S3StorageConfig;
+  tags?: Record<string, string>;
 }
 
 export interface StageDataResponse {
@@ -123,14 +124,22 @@ export interface ChipMetadata {
   created_at: number;
   description: string;
   name: string;
+  tables?: string;
   storage_bucket?: string;
   storage_key_prefix?: string;
   ttl_days?: number;
 }
 
+export interface ChipTag {
+  chip_id: string;
+  key: string;
+  value: string;
+}
+
 export interface ChipsResponse {
   chips: Chip[];
   metadata: ChipMetadata[];
+  tags?: ChipTag[];
 }
 
 export interface DatalatheClientOptions {

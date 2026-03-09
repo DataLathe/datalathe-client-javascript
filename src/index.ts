@@ -28,6 +28,7 @@ export {
   type DatabaseTable,
   type Chip,
   type ChipMetadata,
+  type ChipTag,
   type ChipsResponse,
   type ProfilerTable,
   type ModelerConfig,

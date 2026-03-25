@@ -95,6 +95,32 @@ export class DatalatheClient {
   }
 
   /**
+   * Creates a single chip from an S3 object (CSV, Parquet, etc.).
+   * @param s3Path S3 URI (e.g. s3://bucket/path/file.csv)
+   * @param tableName Optional table name for the chip
+   * @param chipName Optional name for the chip
+   * @param columnReplace Optional column renaming map
+   * @param storageConfig Optional S3 storage configuration for the created chip
+   * @returns The chip ID
+   */
+  async createChipFromS3(
+    s3Path: string,
+    tableName?: string,
+    chipName?: string,
+    columnReplace?: Record<string, string>,
+    storageConfig?: S3StorageConfig,
+  ): Promise<string> {
+    const chips = await this.createChips(
+      [{ database_name: "", query: "", s3_path: s3Path, table_name: tableName, column_replace: columnReplace }],
+      undefined,
+      SourceType.S3,
+      chipName,
+      storageConfig,
+    );
+    return chips[0];
+  }
+
+  /**
    * Creates a new chip from existing chip(s) as the data source.
    * Optionally transforms the data with a SQL query run against the source chips.
    * @param sourceChipIds The chip ID(s) to use as source data

@@ -142,6 +142,28 @@ export interface ChipsResponse {
   tags?: ChipTag[];
 }
 
+export interface ConnectionInfo {
+  alias: string;
+  host: string;
+  port: string;
+  database: string;
+  user: string;
+}
+
+export interface ConnectionRequest {
+  host: string;
+  port: string;
+  database: string;
+  user: string;
+  password: string;
+}
+
+export interface ConnectionResponse {
+  alias: string;
+  status?: string;
+  error?: string;
+}
+
 export interface DatalatheClientOptions {
   /** Custom fetch implementation (for testing or Node 16 polyfill) */
   fetch?: typeof globalThis.fetch;

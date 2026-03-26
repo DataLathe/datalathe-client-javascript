@@ -21,6 +21,7 @@ import type {
   ConnectionInfo,
   ConnectionRequest,
   ConnectionResponse,
+  LicenseStatus,
 } from "./types.js";
 
 export interface GenerateReportResult {
@@ -148,7 +149,7 @@ export class DatalatheClient {
         table_name: tableName,
       }],
       undefined,
-      SourceType.CACHE,
+      SourceType.CHIP,
       chipName,
       storageConfig,
     );
@@ -329,6 +330,22 @@ export class DatalatheClient {
    */
   async testConnection(alias: string): Promise<ConnectionResponse> {
     return this.post<ConnectionResponse>(`/lathe/connections/${encodeURIComponent(alias)}/test`, {});
+  }
+
+  // --- License management ---
+
+  /**
+   * Gets the current license status.
+   */
+  async getLicense(): Promise<LicenseStatus> {
+    return this.get<LicenseStatus>("/lathe/license");
+  }
+
+  /**
+   * Installs or updates the license key.
+   */
+  async putLicense(licenseKey: string): Promise<LicenseStatus> {
+    return this.put<LicenseStatus>("/lathe/license", { license_key: licenseKey });
   }
 
   // --- Profiler methods ---

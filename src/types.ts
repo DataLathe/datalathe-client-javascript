@@ -167,6 +167,11 @@ export interface ConnectionResponse {
   error?: string;
 }
 
+export interface LicenseStatus {
+  installed: boolean;
+  error?: string | null;
+}
+
 export interface DatalatheClientOptions {
   /** Custom fetch implementation (for testing or Node 16 polyfill) */
   fetch?: typeof globalThis.fetch;

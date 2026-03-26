@@ -2,8 +2,11 @@ export enum SourceType {
   MYSQL = "MYSQL",
   FILE = "FILE",
   S3 = "S3",
-  LOCAL = "LOCAL",
-  CACHE = "CACHE",
+  CHIP = "CHIP",
+  /** @deprecated Use CHIP instead */
+  LOCAL = "CHIP",
+  /** @deprecated Use CHIP instead */
+  CACHE = "CHIP",
 }
 
 export enum ReportType {
@@ -140,6 +143,28 @@ export interface ChipsResponse {
   chips: Chip[];
   metadata: ChipMetadata[];
   tags?: ChipTag[];
+}
+
+export interface ConnectionInfo {
+  alias: string;
+  host: string;
+  port: string;
+  database: string;
+  user: string;
+}
+
+export interface ConnectionRequest {
+  host: string;
+  port: string;
+  database: string;
+  user: string;
+  password: string;
+}
+
+export interface ConnectionResponse {
+  alias: string;
+  status?: string;
+  error?: string;
 }
 
 export interface DatalatheClientOptions {

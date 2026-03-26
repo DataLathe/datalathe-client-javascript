@@ -18,6 +18,9 @@ import type {
   SourceFileDetails,
   Job,
   SchemaMapping,
+  ConnectionInfo,
+  ConnectionRequest,
+  ConnectionResponse,
 } from "./types.js";
 
 export interface GenerateReportResult {
@@ -291,6 +294,43 @@ export class DatalatheClient {
     return this.delete(`/lathe/chips/${encodeURIComponent(chipId)}`);
   }
 
+  // --- Connection management ---
+
+  /**
+   * Lists all database connections (passwords excluded).
+   */
+  async listConnections(): Promise<ConnectionInfo[]> {
+    return this.get<ConnectionInfo[]>("/lathe/connections");
+  }
+
+  /**
+   * Gets a database connection by alias (password excluded).
+   */
+  async getConnection(alias: string): Promise<ConnectionInfo> {
+    return this.get<ConnectionInfo>(`/lathe/connections/${encodeURIComponent(alias)}`);
+  }
+
+  /**
+   * Creates or updates a database connection.
+   */
+  async upsertConnection(alias: string, connection: ConnectionRequest): Promise<ConnectionResponse> {
+    return this.put<ConnectionResponse>(`/lathe/connections/${encodeURIComponent(alias)}`, connection);
+  }
+
+  /**
+   * Deletes a database connection.
+   */
+  async deleteConnection(alias: string): Promise<void> {
+    return this.delete(`/lathe/connections/${encodeURIComponent(alias)}`);
+  }
+
+  /**
+   * Tests a database connection by attempting a MySQL attach in DuckDB.
+   */
+  async testConnection(alias: string): Promise<ConnectionResponse> {
+    return this.post<ConnectionResponse>(`/lathe/connections/${encodeURIComponent(alias)}/test`, {});
+  }
+
   // --- Profiler methods ---
 
   async getProfilerTables(): Promise<ProfilerTable[]> {
@@ -530,6 +570,37 @@ export class DatalatheClient {
         const responseBody = await response.text();
         throw new DatalatheApiError(
           `POST ${path} failed: ${response.status} ${responseBody}`,
+          response.status,
+          responseBody,
+        );
+      }
+
+      return this.parseJsonStream<T>(response);
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  private async put<T>(path: string, body: unknown): Promise<T> {
+    const url = this.baseUrl + path;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+    try {
+      const response = await this.fetchFn(url, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          ...this.defaultHeaders,
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        const responseBody = await response.text();
+        throw new DatalatheApiError(
+          `PUT ${path} failed: ${response.status} ${responseBody}`,
           response.status,
           responseBody,
         );

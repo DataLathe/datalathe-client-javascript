@@ -2,8 +2,11 @@ export enum SourceType {
   MYSQL = "MYSQL",
   FILE = "FILE",
   S3 = "S3",
-  LOCAL = "LOCAL",
-  CACHE = "CACHE",
+  CHIP = "CHIP",
+  /** @deprecated Use CHIP instead */
+  LOCAL = "CHIP",
+  /** @deprecated Use CHIP instead */
+  CACHE = "CHIP",
 }
 
 export enum ReportType {

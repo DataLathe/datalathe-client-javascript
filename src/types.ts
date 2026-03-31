@@ -16,59 +16,36 @@ export enum ReportType {
 
 export interface SchemaField {
   name: string;
-  data_type: string;
+  dataType: string;
 }
 
 export interface Partition {
-  partition_by: string;
-  partition_values?: string[];
-  partition_query?: string;
-  combine_partitions?: boolean;
+  partitionBy: string;
+  partitionValues?: string[];
+  partitionQuery?: string;
+  combinePartitions?: boolean;
 }
 
 export interface SourceRequest {
-  database_name: string;
-  table_name?: string;
+  databaseName: string;
+  tableName?: string;
   query: string;
-  file_path?: string;
-  s3_path?: string;
-  source_chip_ids?: string[];
+  filePath?: string;
+  s3Path?: string;
+  sourceChipIds?: string[];
   partition?: Partition;
-  column_replace?: Record<string, string>;
+  columnReplace?: Record<string, string>;
 }
 
 export interface S3StorageConfig {
   bucket?: string;
-  key_prefix?: string;
-  ttl_days?: number;
-}
-
-export interface StageDataRequest {
-  source_type: SourceType;
-  source_request: SourceRequest;
-  chip_id?: string;
-  chip_name?: string;
-  storage_config?: S3StorageConfig;
-  tags?: Record<string, string>;
+  keyPrefix?: string;
+  ttlDays?: number;
 }
 
 export interface StageDataResponse {
-  chip_id: string;
+  chipId: string;
   error: string | null;
-}
-
-export interface QueryRequest {
-  query: string[];
-  file_path?: string;
-}
-
-export interface ReportRequest {
-  chip_id: string[];
-  source_type: SourceType;
-  type: ReportType;
-  query_request: QueryRequest;
-  transform_query?: boolean;
-  return_transformed_query?: boolean;
 }
 
 export interface ReportResultEntry {
@@ -77,13 +54,13 @@ export interface ReportResultEntry {
   data?: (string | null)[][] | null;
   error: string | null;
   schema: SchemaField[] | null;
-  transformed_query?: string | null;
+  transformedQuery?: string | null;
 }
 
 export interface ReportTiming {
-  total_ms: number;
-  chip_attach_ms: number;
-  query_execution_ms: number;
+  totalMs: number;
+  chipAttachMs: number;
+  queryExecutionMs: number;
 }
 
 export interface ReportResponse {
@@ -93,8 +70,8 @@ export interface ReportResponse {
 }
 
 export interface DuckDBDatabase {
-  database_name: string;
-  database_oid: number;
+  databaseName: string;
+  databaseOid: number;
   path?: string;
   comment?: string;
   tags?: string;
@@ -104,37 +81,37 @@ export interface DuckDBDatabase {
 }
 
 export interface DatabaseTable {
-  table_name: string;
-  schema_name: string;
-  column_name: string;
-  data_type: string;
-  is_nullable: string;
-  column_default?: string;
-  ordinal_position: number;
+  tableName: string;
+  schemaName: string;
+  columnName: string;
+  dataType: string;
+  isNullable: string;
+  columnDefault?: string;
+  ordinalPosition: number;
 }
 
 export interface Chip {
-  chip_id: string;
-  sub_chip_id: string;
-  table_name: string;
-  partition_value: string;
-  created_at?: number;
+  chipId: string;
+  subChipId: string;
+  tableName: string;
+  partitionValue: string;
+  createdAt?: number;
 }
 
 export interface ChipMetadata {
-  chip_id: string;
+  chipId: string;
   query?: string;
-  created_at: number;
+  createdAt: number;
   description: string;
   name: string;
   tables?: string;
-  storage_bucket?: string;
-  storage_key_prefix?: string;
-  ttl_days?: number;
+  storageBucket?: string;
+  storageKeyPrefix?: string;
+  ttlDays?: number;
 }
 
 export interface ChipTag {
-  chip_id: string;
+  chipId: string;
   key: string;
   value: string;
 }
@@ -184,36 +161,36 @@ export interface DatalatheClientOptions {
 // Profiler types
 
 export interface ProfilerTable {
-  table_name: string;
-  estimated_size: number;
-  column_count: number;
-  friendly_name: string;
+  tableName: string;
+  estimatedSize: number;
+  columnCount: number;
+  friendlyName: string;
   filter: string;
   schema: string;
-  database_name: string;
+  databaseName: string;
 }
 
 export interface ModelerConfig {
-  pct_single_group: number;
-  pct_of_groups: number;
-  majority_count: number;
-  majority_threshold: number;
+  pctSingleGroup: number;
+  pctOfGroups: number;
+  majorityCount: number;
+  majorityThreshold: number;
 }
 
 export interface TyperConfig {
-  date_sample_pct: number;
-  non_zero_time_pct: number;
+  dateSamplePct: number;
+  nonZeroTimePct: number;
 }
 
 export interface ProfilerConfig {
   modeler: ModelerConfig;
   typer: TyperConfig;
-  mapping_pct: number;
+  mappingPct: number;
 }
 
 export interface DatalatheConfig {
-  data_path: string;
-  persist_path: string;
+  dataPath: string;
+  persistPath: string;
   profiler: ProfilerConfig;
 }
 
@@ -221,73 +198,73 @@ export interface DatalatheConfig {
 
 export interface SourceColumn {
   id: number | null;
-  column_name: string;
-  column_name_lowercase: string;
-  source_header_id: number | null;
-  data_type: string | null;
-  possible_key: boolean | null;
-  is_primary_key: boolean | null;
-  source_file_offset: number | null;
-  found_type: string | null;
-  is_populated: boolean | null;
-  is_possible_characteristic: boolean | null;
+  columnName: string;
+  columnNameLowercase: string;
+  sourceHeaderId: number | null;
+  dataType: string | null;
+  possibleKey: boolean | null;
+  isPrimaryKey: boolean | null;
+  sourceFileOffset: number | null;
+  foundType: string | null;
+  isPopulated: boolean | null;
+  isPossibleCharacteristic: boolean | null;
 }
 
 export interface SourceHeader {
   id: number | null;
-  header_hash: string;
-  possible_mapping_file: boolean | null;
+  headerHash: string;
+  possibleMappingFile: boolean | null;
 }
 
 export interface FoundFile {
   path: string;
-  found_time: number;
+  foundTime: number;
 }
 
 export interface LoadScan {
-  scan_id: number;
-  file_id: number;
-  file_path: string;
+  scanId: number;
+  fileId: number;
+  filePath: string;
 }
 
 export interface LoadError {
-  scan_id: number;
-  file_id: number;
+  scanId: number;
+  fileId: number;
   line: number;
-  line_byte_position: number;
-  byte_position: number;
-  column_idx: number;
-  column_name: string;
-  error_type: string;
-  csv_line: string;
-  error_message: string;
-  file_path: string;
+  lineBytePosition: number;
+  bytePosition: number;
+  columnIdx: number;
+  columnName: string;
+  errorType: string;
+  csvLine: string;
+  errorMessage: string;
+  filePath: string;
   delimiter: string;
   quote: string;
   escape: string;
-  newline_delimiter: string;
-  skip_rows: number;
-  has_header: boolean;
+  newlineDelimiter: string;
+  skipRows: number;
+  hasHeader: boolean;
 }
 
 export interface DataModelColumn {
-  column_id: number;
-  is_primary_key: boolean | null;
-  is_populated: boolean | null;
-  is_characteristic: boolean | null;
-  found_type: string | null;
-  is_data_date: boolean | null;
+  columnId: number;
+  isPrimaryKey: boolean | null;
+  isPopulated: boolean | null;
+  isCharacteristic: boolean | null;
+  foundType: string | null;
+  isDataDate: boolean | null;
 }
 
 export interface SourceFileDetails {
-  file_name: string;
-  source_file_id: number;
-  source_columns: SourceColumn[];
-  source_header: SourceHeader;
-  found_files: FoundFile[];
-  load_scans: LoadScan[];
-  load_errors: LoadError[];
-  data_model_columns: DataModelColumn[];
+  fileName: string;
+  sourceFileId: number;
+  sourceColumns: SourceColumn[];
+  sourceHeader: SourceHeader;
+  foundFiles: FoundFile[];
+  loadScans: LoadScan[];
+  loadErrors: LoadError[];
+  dataModelColumns: DataModelColumn[];
 }
 
 // Job types
@@ -296,7 +273,7 @@ export interface Job {
   id: string;
   name: string;
   status: string;
-  created_at: number;
+  createdAt: number;
   message: string;
 }
 
@@ -305,4 +282,91 @@ export interface Job {
 export interface SchemaMapping {
   id: number;
   columnName: string;
+}
+
+// AI Query types
+
+export interface AiCredential {
+  credentialId: string;
+  name: string;
+  provider: string;
+  defaultModel: string;
+  createdAt: number;
+}
+
+export interface CreateAiCredentialRequest {
+  name: string;
+  provider: string;
+  apiKey: string;
+  defaultModel?: string;
+}
+
+export interface AiContext {
+  contextId: string;
+  name: string;
+  chipIds: string;
+  columnDescriptions: string;
+  dataRelationshipPrompt: string;
+  createdAt: number;
+}
+
+export interface CreateAiContextRequest {
+  name: string;
+  chipIds: string[];
+  columnDescriptions: Record<string, Record<string, string>>;
+  dataRelationshipPrompt: string;
+}
+
+export interface UpdateAiContextRequest {
+  name?: string;
+  chipIds?: string[];
+  columnDescriptions?: Record<string, Record<string, string>>;
+  dataRelationshipPrompt?: string;
+}
+
+export interface ConversationTurn {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface AiQueryRequest {
+  contextId: string;
+  credentialId: string;
+  userQuestion: string;
+  conversationHistory?: ConversationTurn[];
+  model?: string;
+}
+
+export interface AiColumnInfo {
+  name: string;
+  dataType: string;
+}
+
+export interface AiQueryResultData {
+  columns: AiColumnInfo[];
+  rows: (string | null)[][];
+}
+
+export interface AiVisualizationConfig {
+  type: string;
+  title?: string;
+  xAxis?: string;
+  yAxis?: string;
+  series?: string[];
+}
+
+export interface AiLlmUsage {
+  inputTokens: number;
+  outputTokens: number;
+  model: string;
+}
+
+export interface AiQueryResponse {
+  requestId: string;
+  data?: AiQueryResultData;
+  visualization?: AiVisualizationConfig;
+  explanation?: string;
+  generatedSql?: string;
+  usage?: AiLlmUsage;
+  error?: string;
 }

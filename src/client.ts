@@ -1,58 +1,95 @@
-import { JSONParser } from "@streamparser/json";
-import { CreateChipCommand } from "./commands/create-chip.js";
-import { ExtractTablesCommand } from "./commands/extract-tables.js";
-import { GenerateReportCommand } from "./commands/generate-report.js";
-import type { DatalatheCommand } from "./commands/command.js";
+import { HttpClient } from "./http.js";
+import { ChipsApi } from "./chips.js";
+import { QueriesApi, type GenerateReportResult } from "./queries.js";
+import { ConnectionsApi } from "./connections.js";
+import { AiApi } from "./ai.js";
+import { ProfilerApi } from "./profiler.js";
 import type {
   SourceRequest,
   Partition,
   S3StorageConfig,
-  ReportResultEntry,
-  ReportTiming,
+  ConnectionRequest,
+  ConnectionResponse,
+  ConnectionInfo,
+  CreateAiCredentialRequest,
+  AiCredential,
+  CreateAiContextRequest,
+  AiContext,
+  UpdateAiContextRequest,
+  AiQueryRequest,
+  AiQueryResponse,
   DatalatheClientOptions,
   DuckDBDatabase,
   DatabaseTable,
   ChipsResponse,
-  ProfilerTable,
-  DatalatheConfig,
+  LicenseStatus,
   SourceFileDetails,
   Job,
+  DatalatheConfig,
+  ProfilerTable,
   SchemaMapping,
-  ConnectionInfo,
-  ConnectionRequest,
-  ConnectionResponse,
-  LicenseStatus,
 } from "./types.js";
-
-export interface GenerateReportResult {
-  results: Map<number, ReportResultEntry>;
-  timing: ReportTiming | null;
-}
-import { SourceType, ReportType } from "./types.js";
-import { DatalatheApiError, DatalatheStageError } from "./errors.js";
+import { SourceType } from "./types.js";
 
 export class DatalatheClient {
-  private readonly baseUrl: string;
-  private readonly fetchFn: typeof globalThis.fetch;
-  private readonly defaultHeaders: Record<string, string>;
-  private readonly timeout: number;
+  readonly chips: ChipsApi;
+  readonly queries: QueriesApi;
+  readonly connections: ConnectionsApi;
+  readonly ai: AiApi;
+  readonly profiler: ProfilerApi;
+  private readonly http: HttpClient;
 
   constructor(baseUrl: string, options?: DatalatheClientOptions) {
-    this.baseUrl = baseUrl.replace(/\/+$/, "");
-    this.fetchFn = options?.fetch ?? globalThis.fetch.bind(globalThis);
-    this.defaultHeaders = options?.headers ?? {};
-    this.timeout = options?.timeout ?? 30_000;
+    this.http = new HttpClient(baseUrl, options);
+    this.chips = new ChipsApi(this.http);
+    this.queries = new QueriesApi(this.http);
+    this.connections = new ConnectionsApi(this.http);
+    this.ai = new AiApi(this.http);
+    this.profiler = new ProfilerApi(this.http);
   }
 
-  /**
-   * Creates a single chip from a MySQL source.
-   * @param sourceName The name of the source database
-   * @param query The SQL query to execute
-   * @param tableName The name of the table
-   * @param partition Optional partition configuration
-   * @param chipName Optional name for the chip
-   * @returns The chip ID
-   */
+  // --- Database inspection ---
+
+  async getDatabases(): Promise<DuckDBDatabase[]> {
+    return this.http.get<DuckDBDatabase[]>("/lathe/stage/databases");
+  }
+
+  async getDatabaseSchema(databaseName: string): Promise<DatabaseTable[]> {
+    return this.http.get<DatabaseTable[]>(
+      `/lathe/stage/schema/${encodeURIComponent(databaseName)}`,
+    );
+  }
+
+  // --- License management ---
+
+  async getLicense(): Promise<LicenseStatus> {
+    return this.http.get<LicenseStatus>("/lathe/license");
+  }
+
+  async putLicense(licenseKey: string): Promise<LicenseStatus> {
+    return this.http.postRaw<LicenseStatus>("/lathe/license", { license_key: licenseKey }, "PUT");
+  }
+
+  // --- Source methods ---
+
+  async getSourceFile(fileId: string): Promise<SourceFileDetails> {
+    return this.http.get<SourceFileDetails>(
+      `/lathe/source/file/${encodeURIComponent(fileId)}`,
+    );
+  }
+
+  // --- Job methods ---
+
+  async getAllJobs(): Promise<Record<string, Job>> {
+    return this.http.get<Record<string, Job>>("/lathe/jobs/all");
+  }
+
+  // --- Deprecated delegation methods ---
+  // These forward to sub-modules for backward compatibility.
+  // Use client.chips.*, client.queries.*, client.connections.*,
+  // client.ai.*, client.profiler.* instead.
+
+  /** @deprecated Use client.chips.create() */
   async createChip(
     sourceName: string,
     query: string,
@@ -62,24 +99,10 @@ export class DatalatheClient {
     columnReplace?: Record<string, string>,
     storageConfig?: S3StorageConfig,
   ): Promise<string> {
-    const chips = await this.createChips(
-      [{ database_name: sourceName, table_name: tableName, query, partition, column_replace: columnReplace }],
-      undefined,
-      SourceType.MYSQL,
-      chipName,
-      storageConfig,
-    );
-    return chips[0];
+    return this.chips.create(sourceName, query, tableName, partition, chipName, columnReplace, storageConfig);
   }
 
-  /**
-   * Creates a single chip from a file source (CSV, Parquet, etc.).
-   * @param filePath Path to the file on the server
-   * @param tableName Optional table name for the chip
-   * @param partition Optional partition configuration
-   * @param chipName Optional name for the chip
-   * @returns The chip ID
-   */
+  /** @deprecated Use client.chips.createFromFile() */
   async createChipFromFile(
     filePath: string,
     tableName?: string,
@@ -88,25 +111,10 @@ export class DatalatheClient {
     columnReplace?: Record<string, string>,
     storageConfig?: S3StorageConfig,
   ): Promise<string> {
-    const chips = await this.createChips(
-      [{ database_name: "", query: "", file_path: filePath, table_name: tableName, partition, column_replace: columnReplace }],
-      undefined,
-      SourceType.FILE,
-      chipName,
-      storageConfig,
-    );
-    return chips[0];
+    return this.chips.createFromFile(filePath, tableName, partition, chipName, columnReplace, storageConfig);
   }
 
-  /**
-   * Creates a single chip from an S3 object (CSV, Parquet, etc.).
-   * @param s3Path S3 URI (e.g. s3://bucket/path/file.csv)
-   * @param tableName Optional table name for the chip
-   * @param chipName Optional name for the chip
-   * @param columnReplace Optional column renaming map
-   * @param storageConfig Optional S3 storage configuration for the created chip
-   * @returns The chip ID
-   */
+  /** @deprecated Use client.chips.createFromS3() */
   async createChipFromS3(
     s3Path: string,
     tableName?: string,
@@ -114,26 +122,10 @@ export class DatalatheClient {
     columnReplace?: Record<string, string>,
     storageConfig?: S3StorageConfig,
   ): Promise<string> {
-    const chips = await this.createChips(
-      [{ database_name: "", query: "", s3_path: s3Path, table_name: tableName, column_replace: columnReplace }],
-      undefined,
-      SourceType.S3,
-      chipName,
-      storageConfig,
-    );
-    return chips[0];
+    return this.chips.createFromS3(s3Path, tableName, chipName, columnReplace, storageConfig);
   }
 
-  /**
-   * Creates a new chip from existing chip(s) as the data source.
-   * Optionally transforms the data with a SQL query run against the source chips.
-   * @param sourceChipIds The chip ID(s) to use as source data
-   * @param query Optional SQL query to transform the data (runs against source chip tables)
-   * @param tableName Optional table name for the new chip (defaults to "data")
-   * @param chipName Optional name for the chip
-   * @param storageConfig Optional S3 storage configuration
-   * @returns The new chip ID
-   */
+  /** @deprecated Use client.chips.createFromChip() */
   async createChipFromChip(
     sourceChipIds: string[],
     query?: string,
@@ -141,29 +133,10 @@ export class DatalatheClient {
     chipName?: string,
     storageConfig?: S3StorageConfig,
   ): Promise<string> {
-    const chips = await this.createChips(
-      [{
-        database_name: "",
-        query: query ?? "",
-        source_chip_ids: sourceChipIds,
-        table_name: tableName,
-      }],
-      undefined,
-      SourceType.CHIP,
-      chipName,
-      storageConfig,
-    );
-    return chips[0];
+    return this.chips.createFromChip(sourceChipIds, query, tableName, chipName, storageConfig);
   }
 
-  /**
-   * Stages data from multiple source requests and returns chip IDs.
-   * @param sources List of source requests to process
-   * @param chipId Optional chip ID to use
-   * @param sourceType Source type (defaults to MYSQL)
-   * @param chipName Optional name for the chip
-   * @returns List of chip IDs
-   */
+  /** @deprecated Use client.chips.createMultiple() */
   async createChips(
     sources: SourceRequest[],
     chipId?: string,
@@ -172,26 +145,35 @@ export class DatalatheClient {
     storageConfig?: S3StorageConfig,
     tags?: Record<string, string>,
   ): Promise<string[]> {
-    const chipIds: string[] = [];
-    for (const source of sources) {
-      const command = new CreateChipCommand(sourceType, source, chipId, chipName, storageConfig, tags);
-      const response = await this.sendCommand(command);
-      if (response.error) {
-        throw new DatalatheStageError(
-          `Failed to stage data: ${response.error}`,
-        );
-      }
-      chipIds.push(response.chip_id);
-    }
-    return chipIds;
+    return this.chips.createMultiple(sources, chipId, sourceType, chipName, storageConfig, tags);
   }
 
-  /**
-   * Executes queries against chip IDs.
-   * @param chipIds List of chip IDs to query
-   * @param queries List of SQL queries to execute
-   * @returns Map of query index to result entry
-   */
+  /** @deprecated Use client.chips.list() */
+  async listChips(): Promise<ChipsResponse> {
+    return this.chips.list();
+  }
+
+  /** @deprecated Use client.chips.search() */
+  async searchChips(tableName?: string, partitionValue?: string, tag?: string): Promise<ChipsResponse> {
+    return this.chips.search(tableName, partitionValue, tag);
+  }
+
+  /** @deprecated Use client.chips.addTags() */
+  async addChipTags(chipId: string, tags: Record<string, string>): Promise<void> {
+    return this.chips.addTags(chipId, tags);
+  }
+
+  /** @deprecated Use client.chips.deleteTag() */
+  async deleteChipTag(chipId: string, key: string): Promise<void> {
+    return this.chips.deleteTag(chipId, key);
+  }
+
+  /** @deprecated Use client.chips.delete() */
+  async deleteChip(chipId: string): Promise<void> {
+    return this.chips.delete(chipId);
+  }
+
+  /** @deprecated Use client.queries.generateReport() */
   async generateReport(
     chipIds: string[],
     queries: string[],
@@ -199,472 +181,153 @@ export class DatalatheClient {
     transformQuery?: boolean,
     returnTransformedQuery?: boolean,
   ): Promise<GenerateReportResult> {
-    const command = new GenerateReportCommand(
-      chipIds,
-      sourceType,
-      queries,
-      undefined,
-      transformQuery,
-      returnTransformedQuery,
-    );
-    const response = await this.sendCommand(command);
-    const results = new Map<number, ReportResultEntry>();
-
-    if (response.result) {
-      for (const [key, entry] of Object.entries(response.result)) {
-        results.set(parseInt(key, 10), entry);
-      }
-    }
-
-    return { results, timing: response.timing ?? null };
+    return this.queries.generateReport(chipIds, queries, sourceType, transformQuery, returnTransformedQuery);
   }
 
-  /**
-   * Returns the list of databases available in the DuckDB instance.
-   */
-  async getDatabases(): Promise<DuckDBDatabase[]> {
-    return this.get<DuckDBDatabase[]>("/lathe/stage/databases");
+  /** @deprecated Use client.queries.extractTables() */
+  async extractTables(query: string): Promise<string[]> {
+    return this.queries.extractTables(query);
   }
 
-  /**
-   * Returns the schema (tables and columns) for a given database.
-   * @param databaseName The name of the database to inspect
-   */
-  async getDatabaseSchema(databaseName: string): Promise<DatabaseTable[]> {
-    return this.get<DatabaseTable[]>(
-      `/lathe/stage/schema/${encodeURIComponent(databaseName)}`,
-    );
+  /** @deprecated Use client.queries.extractTablesWithTransform() */
+  async extractTablesWithTransform(
+    query: string,
+    transform?: boolean,
+  ): Promise<{ tables: string[]; transformedQuery: string | null }> {
+    return this.queries.extractTablesWithTransform(query, transform);
   }
 
-  /**
-   * Returns all chips and their metadata.
-   */
-  async listChips(): Promise<ChipsResponse> {
-    return this.get<ChipsResponse>("/lathe/chips");
+  /** @deprecated Use client.queries.stageData() */
+  async stageData(request: unknown): Promise<unknown> {
+    return this.queries.stageData(request);
   }
 
-  /**
-   * Searches for chips by table name, partition value, and/or tag.
-   * @param tableName Optional table name filter
-   * @param partitionValue Optional partition value filter
-   * @param tag Optional tag filter in "key:value" format
-   * @returns Matching chips and their metadata
-   */
-  async searchChips(
-    tableName?: string,
-    partitionValue?: string,
-    tag?: string,
-  ): Promise<ChipsResponse> {
-    const params = new URLSearchParams();
-    if (tableName !== undefined) params.set("table_name", tableName);
-    if (partitionValue !== undefined) params.set("partition_value", partitionValue);
-    if (tag !== undefined) params.set("tag", tag);
-    const query = params.toString();
-    const path = `/lathe/chips/search${query ? `?${query}` : ""}`;
-    return this.get<ChipsResponse>(path);
+  /** @deprecated Use client.queries.postReport() */
+  async postReport(request: unknown): Promise<unknown> {
+    return this.queries.postReport(request);
   }
 
-  /**
-   * Adds or updates tags on a chip. Existing keys have their values replaced.
-   * @param chipId The chip ID to tag
-   * @param tags Key-value pairs to set
-   */
-  async addChipTags(
-    chipId: string,
-    tags: Record<string, string>,
-  ): Promise<void> {
-    await this.post(`/lathe/chips/${encodeURIComponent(chipId)}/tags`, { tags });
-  }
-
-  /**
-   * Removes a tag from a chip by key.
-   * @param chipId The chip ID
-   * @param key The tag key to remove
-   */
-  async deleteChipTag(chipId: string, key: string): Promise<void> {
-    return this.delete(
-      `/lathe/chips/${encodeURIComponent(chipId)}/tags/${encodeURIComponent(key)}`,
-    );
-  }
-
-  /**
-   * Deletes a chip and its associated data (local files and S3 objects).
-   * @param chipId The ID of the chip to delete
-   */
-  async deleteChip(chipId: string): Promise<void> {
-    return this.delete(`/lathe/chips/${encodeURIComponent(chipId)}`);
-  }
-
-  // --- Connection management ---
-
-  /**
-   * Lists all database connections (passwords excluded).
-   */
+  /** @deprecated Use client.connections.list() */
   async listConnections(): Promise<ConnectionInfo[]> {
-    return this.get<ConnectionInfo[]>("/lathe/connections");
+    return this.connections.list();
   }
 
-  /**
-   * Gets a database connection by alias (password excluded).
-   */
+  /** @deprecated Use client.connections.get() */
   async getConnection(alias: string): Promise<ConnectionInfo> {
-    return this.get<ConnectionInfo>(`/lathe/connections/${encodeURIComponent(alias)}`);
+    return this.connections.get(alias);
   }
 
-  /**
-   * Creates or updates a database connection.
-   */
+  /** @deprecated Use client.connections.upsert() */
   async upsertConnection(alias: string, connection: ConnectionRequest): Promise<ConnectionResponse> {
-    return this.put<ConnectionResponse>(`/lathe/connections/${encodeURIComponent(alias)}`, connection);
+    return this.connections.upsert(alias, connection);
   }
 
-  /**
-   * Deletes a database connection.
-   */
+  /** @deprecated Use client.connections.delete() */
   async deleteConnection(alias: string): Promise<void> {
-    return this.delete(`/lathe/connections/${encodeURIComponent(alias)}`);
+    return this.connections.delete(alias);
   }
 
-  /**
-   * Tests a database connection by attempting a MySQL attach in DuckDB.
-   */
+  /** @deprecated Use client.connections.test() */
   async testConnection(alias: string): Promise<ConnectionResponse> {
-    return this.post<ConnectionResponse>(`/lathe/connections/${encodeURIComponent(alias)}/test`, {});
+    return this.connections.test(alias);
   }
 
-  // --- License management ---
-
-  /**
-   * Gets the current license status.
-   */
-  async getLicense(): Promise<LicenseStatus> {
-    return this.get<LicenseStatus>("/lathe/license");
+  /** @deprecated Use client.ai.registerCredential() */
+  async registerAiCredential(request: CreateAiCredentialRequest): Promise<AiCredential> {
+    return this.ai.registerCredential(request);
   }
 
-  /**
-   * Installs or updates the license key.
-   */
-  async putLicense(licenseKey: string): Promise<LicenseStatus> {
-    return this.put<LicenseStatus>("/lathe/license", { license_key: licenseKey });
+  /** @deprecated Use client.ai.listCredentials() */
+  async listAiCredentials(): Promise<AiCredential[]> {
+    return this.ai.listCredentials();
   }
 
-  // --- Profiler methods ---
+  /** @deprecated Use client.ai.deleteCredential() */
+  async deleteAiCredential(credentialId: string): Promise<void> {
+    return this.ai.deleteCredential(credentialId);
+  }
 
+  /** @deprecated Use client.ai.registerContext() */
+  async registerAiContext(request: CreateAiContextRequest): Promise<AiContext> {
+    return this.ai.registerContext(request);
+  }
+
+  /** @deprecated Use client.ai.listContexts() */
+  async listAiContexts(): Promise<AiContext[]> {
+    return this.ai.listContexts();
+  }
+
+  /** @deprecated Use client.ai.getContext() */
+  async getAiContext(contextId: string): Promise<AiContext> {
+    return this.ai.getContext(contextId);
+  }
+
+  /** @deprecated Use client.ai.updateContext() */
+  async updateAiContext(contextId: string, request: UpdateAiContextRequest): Promise<AiContext> {
+    return this.ai.updateContext(contextId, request);
+  }
+
+  /** @deprecated Use client.ai.deleteContext() */
+  async deleteAiContext(contextId: string): Promise<void> {
+    return this.ai.deleteContext(contextId);
+  }
+
+  /** @deprecated Use client.ai.query() */
+  async aiQuery(request: AiQueryRequest): Promise<AiQueryResponse> {
+    return this.ai.query(request);
+  }
+
+  /** @deprecated Use client.profiler.getTables() */
   async getProfilerTables(): Promise<ProfilerTable[]> {
-    return this.get<ProfilerTable[]>("/lathe/profiler/tables");
+    return this.profiler.getTables();
   }
 
+  /** @deprecated Use client.profiler.start() */
   async startProfiler(skipFiles: boolean): Promise<unknown> {
-    return this.get<unknown>(`/lathe/profiler/start/${skipFiles}`);
+    return this.profiler.start(skipFiles);
   }
 
+  /** @deprecated Use client.profiler.getTableDescription() */
   async getTableDescription(tableId: string): Promise<unknown[]> {
-    return this.get<unknown[]>(
-      `/lathe/profiler/table/${encodeURIComponent(tableId)}/describe`,
-    );
+    return this.profiler.getTableDescription(tableId);
   }
 
+  /** @deprecated Use client.profiler.getTableData() */
   async getTableData(tableId: string): Promise<unknown[]> {
-    return this.get<unknown[]>(
-      `/lathe/profiler/table/${encodeURIComponent(tableId)}`,
-    );
+    return this.profiler.getTableData(tableId);
   }
 
+  /** @deprecated Use client.profiler.getTableSourceFiles() */
   async getTableSourceFiles(tableId: string): Promise<unknown[]> {
-    return this.get<unknown[]>(
-      `/lathe/profiler/table/${encodeURIComponent(tableId)}/source_file`,
-    );
+    return this.profiler.getTableSourceFiles(tableId);
   }
 
+  /** @deprecated Use client.profiler.getTableSummary() */
   async getTableSummary(tableId: string): Promise<unknown> {
-    return this.get<unknown>(
-      `/lathe/profiler/table/${encodeURIComponent(tableId)}/summary`,
-    );
+    return this.profiler.getTableSummary(tableId);
   }
 
+  /** @deprecated Use client.profiler.getConfig() */
   async getProfilerConfig(): Promise<DatalatheConfig> {
-    return this.get<DatalatheConfig>("/lathe/profiler/config");
+    return this.profiler.getConfig();
   }
 
+  /** @deprecated Use client.profiler.updateConfig() */
   async updateProfilerConfig(config: DatalatheConfig): Promise<unknown> {
-    return this.post<unknown>("/lathe/profiler/config/update", config);
+    return this.profiler.updateConfig(config);
   }
 
+  /** @deprecated Use client.profiler.getSchemaMappings() */
   async getSchemaMappings(): Promise<SchemaMapping[]> {
-    return this.get<SchemaMapping[]>("/lathe/profiler/schema/mappings");
+    return this.profiler.getSchemaMappings();
   }
 
+  /** @deprecated Use client.profiler.getSchema() */
   async getProfilerSchema(request: {
     show_unpopulated_fields: boolean;
     mapping_file_source: number | null;
     mapping_file_target: number | null;
   }): Promise<unknown> {
-    return this.post<unknown>("/lathe/profiler/schema", request);
-  }
-
-  // --- Source methods ---
-
-  async getSourceFile(fileId: string): Promise<SourceFileDetails> {
-    return this.get<SourceFileDetails>(
-      `/lathe/source/file/${encodeURIComponent(fileId)}`,
-    );
-  }
-
-  // --- Job methods ---
-
-  async getAllJobs(): Promise<Record<string, Job>> {
-    return this.get<Record<string, Job>>("/lathe/jobs/all");
-  }
-
-  // --- Query analysis ---
-
-  /**
-   * Extracts the list of table names referenced in a SQL query.
-   * @param query The SQL query to analyze
-   * @returns List of table names
-   */
-  async extractTables(query: string): Promise<string[]> {
-    const response = await this.extractTablesWithTransform(query);
-    return response.tables;
-  }
-
-  /**
-   * Extracts the list of table names referenced in a SQL query.
-   * Optionally transforms the query from MySQL/MariaDB syntax to DuckDB.
-   * @param query The SQL query to analyze
-   * @param transform When true, also returns the query transformed to DuckDB syntax
-   * @returns Tables and optionally the transformed query
-   */
-  async extractTablesWithTransform(
-    query: string,
-    transform?: boolean,
-  ): Promise<{ tables: string[]; transformed_query: string | null }> {
-    const command = new ExtractTablesCommand(query, transform);
-    const response = await this.sendCommand(command);
-    if (response.error) {
-      throw new DatalatheApiError(
-        `Failed to extract tables: ${response.error}`,
-        400,
-        response.error,
-      );
-    }
-    return { tables: response.tables, transformed_query: response.transformed_query };
-  }
-
-  // --- Stage data (raw) ---
-
-  async stageData(request: unknown): Promise<unknown> {
-    return this.post<unknown>("/lathe/stage/data", request);
-  }
-
-  // --- Report (raw) ---
-
-  async postReport(request: unknown): Promise<unknown> {
-    return this.post<unknown>("/lathe/report", request);
-  }
-
-  /**
-   * Parses a JSON response body using streaming to avoid V8's string length limit.
-   * Falls back to response.json() if the body stream is not available.
-   */
-  private async parseJsonStream<T>(response: Response): Promise<T> {
-    const body = response.body;
-    if (!body) {
-      return (await response.json()) as T;
-    }
-
-    return new Promise<T>((resolve, reject) => {
-      const parser = new JSONParser();
-      let result: unknown;
-
-      parser.onValue = ({ value, stack }) => {
-        if (stack.length === 0) {
-          result = value;
-        }
-      };
-      parser.onEnd = () => resolve(result as T);
-      parser.onError = (err: Error) => reject(err);
-
-      const reader = body.getReader();
-      const pump = async () => {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) {
-            parser.end();
-            break;
-          }
-          parser.write(value);
-        }
-      };
-      pump().catch(reject);
-    });
-  }
-
-  /**
-   * Sends a GET request to the Datalathe API.
-   * @param path The API path to request
-   * @returns The parsed JSON response
-   */
-  private async get<T>(path: string): Promise<T> {
-    const url = this.baseUrl + path;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
-
-    try {
-      const response = await this.fetchFn(url, {
-        method: "GET",
-        headers: { ...this.defaultHeaders },
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        const body = await response.text();
-        throw new DatalatheApiError(
-          `GET ${path} failed: ${response.status} ${body}`,
-          response.status,
-          body,
-        );
-      }
-
-      return this.parseJsonStream<T>(response);
-    } finally {
-      clearTimeout(timeoutId);
-    }
-  }
-
-  /**
-   * Sends a DELETE request to the Datalathe API.
-   * @param path The API path to request
-   */
-  private async delete(path: string): Promise<void> {
-    const url = this.baseUrl + path;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
-
-    try {
-      const response = await this.fetchFn(url, {
-        method: "DELETE",
-        headers: { ...this.defaultHeaders },
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        const body = await response.text();
-        throw new DatalatheApiError(
-          `DELETE ${path} failed: ${response.status} ${body}`,
-          response.status,
-          body,
-        );
-      }
-    } finally {
-      clearTimeout(timeoutId);
-    }
-  }
-
-  /**
-   * Sends a POST request to the Datalathe API.
-   * @param path The API path to request
-   * @param body The request body
-   * @returns The parsed JSON response
-   */
-  private async post<T>(path: string, body: unknown): Promise<T> {
-    const url = this.baseUrl + path;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
-
-    try {
-      const response = await this.fetchFn(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...this.defaultHeaders,
-        },
-        body: JSON.stringify(body),
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        const responseBody = await response.text();
-        throw new DatalatheApiError(
-          `POST ${path} failed: ${response.status} ${responseBody}`,
-          response.status,
-          responseBody,
-        );
-      }
-
-      return this.parseJsonStream<T>(response);
-    } finally {
-      clearTimeout(timeoutId);
-    }
-  }
-
-  private async put<T>(path: string, body: unknown): Promise<T> {
-    const url = this.baseUrl + path;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
-
-    try {
-      const response = await this.fetchFn(url, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          ...this.defaultHeaders,
-        },
-        body: JSON.stringify(body),
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        const responseBody = await response.text();
-        throw new DatalatheApiError(
-          `PUT ${path} failed: ${response.status} ${responseBody}`,
-          response.status,
-          responseBody,
-        );
-      }
-
-      return this.parseJsonStream<T>(response);
-    } finally {
-      clearTimeout(timeoutId);
-    }
-  }
-
-  /**
-   * Sends a command to the Datalathe API.
-   * @param command The command to send
-   * @returns The parsed response
-   */
-  async sendCommand<TReq, TRes>(
-    command: DatalatheCommand<TReq, TRes>,
-  ): Promise<TRes> {
-    const url = this.baseUrl + command.endpoint;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
-
-    try {
-      const response = await this.fetchFn(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...this.defaultHeaders,
-        },
-        body: JSON.stringify(command.request),
-        signal: controller.signal,
-      });
-
-      if (!response.ok) {
-        const body = await response.text();
-        throw new DatalatheApiError(
-          `Failed to execute command: ${response.status} ${body}`,
-          response.status,
-          body,
-        );
-      }
-
-      const json = await this.parseJsonStream(response);
-      return command.parseResponse(json);
-    } finally {
-      clearTimeout(timeoutId);
-    }
+    return this.profiler.getSchema(request);
   }
 }

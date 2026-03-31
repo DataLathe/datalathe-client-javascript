@@ -14,7 +14,7 @@ describe("DatalatheClient", () => {
       fetch,
     });
 
-    const chipId = await client.createChip(
+    const chipId = await client.chips.create(
       "test_db",
       "SELECT * FROM users",
       "test_table",
@@ -24,6 +24,7 @@ describe("DatalatheClient", () => {
     expect(calls).toHaveLength(1);
     expect(calls[0].url).toBe("http://localhost:8080/lathe/stage/data");
 
+    // Wire format uses snake_case
     const body = calls[0].body as Record<string, unknown>;
     expect(body.source_type).toBe("MYSQL");
     expect(
@@ -73,7 +74,7 @@ describe("DatalatheClient", () => {
       fetch,
     });
 
-    const { results } = await client.generateReport(
+    const { results } = await client.queries.generateReport(
       ["chip1", "chip2"],
       ["SELECT * FROM users", "SELECT * FROM orders"],
     );
@@ -100,11 +101,11 @@ describe("DatalatheClient", () => {
     expect(rs2.getInt(2)).toBe(200);
     expect(rs2.next()).toBe(false);
 
-    // Verify request
+    // Verify wire format request uses snake_case
     expect(calls).toHaveLength(1);
     const body = calls[0].body as Record<string, unknown>;
     expect(body.chip_id).toEqual(["chip1", "chip2"]);
-    expect(body.source_type).toBe("LOCAL");
+    expect(body.source_type).toBe("CHIP");
     expect(
       (body.query_request as Record<string, unknown>).query,
     ).toEqual([
@@ -132,12 +133,11 @@ describe("DatalatheClient", () => {
       fetch,
     });
 
-    const { results } = await client.generateReport(
+    const { results } = await client.queries.generateReport(
       ["chip1"],
       ["SELECT * FROM users"],
     );
 
-    // Result entry is present but contains the error
     expect(results.size).toBe(1);
     expect(results.get(0)!.error).toBe("Table not found");
     expect(results.get(0)!.result).toBeNull();
@@ -153,7 +153,7 @@ describe("DatalatheClient", () => {
     });
 
     await expect(
-      client.createChip("test_db", "SELECT 1", "test_table"),
+      client.chips.create("test_db", "SELECT 1", "test_table"),
     ).rejects.toThrow(DatalatheApiError);
   });
 
@@ -170,7 +170,7 @@ describe("DatalatheClient", () => {
     });
 
     await expect(
-      client.createChip("test_db", "SELECT 1", "test_table"),
+      client.chips.create("test_db", "SELECT 1", "test_table"),
     ).rejects.toThrow(DatalatheStageError);
   });
 
@@ -184,16 +184,16 @@ describe("DatalatheClient", () => {
       fetch,
     });
 
-    const chipIds = await client.createChips([
+    const chipIds = await client.chips.createMultiple([
       {
-        database_name: "db1",
+        databaseName: "db1",
         query: "SELECT * FROM users",
-        table_name: "users",
+        tableName: "users",
       },
       {
-        database_name: "db1",
+        databaseName: "db1",
         query: "SELECT * FROM orders",
-        table_name: "orders",
+        tableName: "orders",
       },
     ]);
 
@@ -208,7 +208,8 @@ describe("DatalatheClient", () => {
   });
 
   it("testGetDatabases", async () => {
-    const databases = [
+    // Server returns snake_case
+    const serverResponse = [
       {
         database_name: "mydb",
         database_oid: 1,
@@ -227,13 +228,17 @@ describe("DatalatheClient", () => {
     ];
 
     const { fetch, calls } = createMockFetch([
-      { status: 200, body: databases },
+      { status: 200, body: serverResponse },
     ]);
 
     const client = new DatalatheClient("http://localhost:8080", { fetch });
     const result = await client.getDatabases();
 
-    expect(result).toEqual(databases);
+    // Client returns camelCase
+    expect(result[0].databaseName).toBe("mydb");
+    expect(result[0].databaseOid).toBe(1);
+    expect(result[1].databaseName).toBe("system");
+    expect(result[1].internal).toBe(true);
     expect(calls).toHaveLength(1);
     expect(calls[0].url).toBe(
       "http://localhost:8080/lathe/stage/databases",
@@ -242,7 +247,7 @@ describe("DatalatheClient", () => {
   });
 
   it("testGetDatabaseSchema", async () => {
-    const schema = [
+    const serverResponse = [
       {
         table_name: "users",
         schema_name: "main",
@@ -262,13 +267,17 @@ describe("DatalatheClient", () => {
     ];
 
     const { fetch, calls } = createMockFetch([
-      { status: 200, body: schema },
+      { status: 200, body: serverResponse },
     ]);
 
     const client = new DatalatheClient("http://localhost:8080", { fetch });
     const result = await client.getDatabaseSchema("mydb");
 
-    expect(result).toEqual(schema);
+    expect(result[0].tableName).toBe("users");
+    expect(result[0].columnName).toBe("id");
+    expect(result[0].dataType).toBe("INTEGER");
+    expect(result[0].isNullable).toBe("false");
+    expect(result[1].columnName).toBe("name");
     expect(calls).toHaveLength(1);
     expect(calls[0].url).toBe(
       "http://localhost:8080/lathe/stage/schema/mydb",
@@ -303,10 +312,11 @@ describe("DatalatheClient", () => {
     ]);
 
     const client = new DatalatheClient("http://localhost:8080", { fetch });
-    const result = await client.listChips();
+    const result = await client.chips.list();
 
     expect(result.chips).toHaveLength(1);
-    expect(result.chips[0].chip_id).toBe("chip1");
+    expect(result.chips[0].chipId).toBe("chip1");
+    expect(result.chips[0].tableName).toBe("users");
     expect(result.metadata).toHaveLength(1);
     expect(result.metadata[0].name).toBe("users_chip");
     expect(calls).toHaveLength(1);
@@ -334,7 +344,7 @@ describe("DatalatheClient", () => {
       { fetch },
     );
 
-    await client.createChip("db", "SELECT 1", "t");
+    await client.chips.create("db", "SELECT 1", "t");
 
     expect(calls[0].url).toBe(
       "http://localhost:8080/lathe/stage/data",

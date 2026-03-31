@@ -10,11 +10,11 @@ describe("DatalatheResultSet", () => {
       idx: "0",
       error: null,
       schema: [
-        { name: "id", data_type: "Int32" },
-        { name: "name", data_type: "Utf8" },
-        { name: "age", data_type: "Int32" },
-        { name: "active", data_type: "Boolean" },
-        { name: "score", data_type: "Float64" },
+        { name: "id", dataType: "Int32" },
+        { name: "name", dataType: "Utf8" },
+        { name: "age", dataType: "Int32" },
+        { name: "active", dataType: "Boolean" },
+        { name: "score", dataType: "Float64" },
       ],
       result: [
         ["1", "John", "30", "true", "95.5"],
@@ -265,7 +265,7 @@ describe("DatalatheResultSet", () => {
     const result: ReportResultEntry = {
       idx: "0",
       error: null,
-      schema: [{ name: "id", data_type: "Int32" }],
+      schema: [{ name: "id", dataType: "Int32" }],
       result: null,
       data: [["42"]],
     };

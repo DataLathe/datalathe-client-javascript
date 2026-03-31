@@ -132,7 +132,7 @@ export class DatalatheResultSet {
       return null;
     }
 
-    const dataType = this.schema[columnIndex - 1].data_type;
+    const dataType = this.schema[columnIndex - 1].dataType;
     switch (dataType) {
       case "Int32":
       case "Int64":
@@ -174,7 +174,7 @@ export class DatalatheResultSet {
   }
 
   getColumnType(columnIndex: number): string {
-    return this.schema[columnIndex - 1].data_type;
+    return this.schema[columnIndex - 1].dataType;
   }
 
   getSchema(): SchemaField[] {

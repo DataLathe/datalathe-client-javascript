@@ -134,11 +134,18 @@ export class DatalatheResultSet {
 
     const dataType = this.schema[columnIndex - 1].dataType;
     switch (dataType) {
+      case "Int8":
+      case "Int16":
       case "Int32":
       case "Int64":
+      case "UInt8":
+      case "UInt16":
+      case "UInt32":
+      case "UInt64":
         return parseInt(value, 10);
       case "Float32":
       case "Float64":
+      case "Decimal128":
         return parseFloat(value);
       case "Boolean":
         return value.toLowerCase() === "true";

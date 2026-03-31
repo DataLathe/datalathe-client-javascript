@@ -1,14 +1,16 @@
 export { DatalatheClient } from "./client.js";
-export type { GenerateReportResult } from "./client.js";
+export { ChipsApi } from "./chips.js";
+export { QueriesApi, type GenerateReportResult } from "./queries.js";
+export { ConnectionsApi } from "./connections.js";
+export { AiApi } from "./ai.js";
+export { ProfilerApi } from "./profiler.js";
 export { DatalatheResultSet } from "./results/result-set.js";
-export { CreateChipCommand } from "./commands/create-chip.js";
-export { GenerateReportCommand } from "./commands/generate-report.js";
-export type { DatalatheCommand } from "./commands/command.js";
 export {
   DatalatheError,
   DatalatheApiError,
   DatalatheStageError,
 } from "./errors.js";
+export { snakeToCamelKeys } from "./transform.js";
 export {
   SourceType,
   ReportType,
@@ -16,10 +18,7 @@ export {
   type SourceRequest,
   type Partition,
   type S3StorageConfig,
-  type StageDataRequest,
   type StageDataResponse,
-  type QueryRequest,
-  type ReportRequest,
   type ReportResultEntry,
   type ReportResponse,
   type ReportTiming,
@@ -47,4 +46,17 @@ export {
   type SourceFileDetails,
   type Job,
   type SchemaMapping,
+  type LicenseStatus,
+  type AiCredential,
+  type CreateAiCredentialRequest,
+  type AiContext,
+  type CreateAiContextRequest,
+  type UpdateAiContextRequest,
+  type ConversationTurn,
+  type AiQueryRequest,
+  type AiColumnInfo,
+  type AiQueryResultData,
+  type AiVisualizationConfig,
+  type AiLlmUsage,
+  type AiQueryResponse,
 } from "./types.js";

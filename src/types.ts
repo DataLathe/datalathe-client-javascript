@@ -331,9 +331,10 @@ export interface ConversationTurn {
 
 export interface AiQueryRequest {
   contextId: string;
-  credentialId: string;
+  credentialId?: string;
   userQuestion: string;
   conversationHistory?: ConversationTurn[];
+  sessionId?: string;
   model?: string;
 }
 
@@ -367,6 +368,8 @@ export interface AiQueryResponse {
   visualization?: AiVisualizationConfig;
   explanation?: string;
   generatedSql?: string;
+  assistantTurn?: ConversationTurn;
+  sessionId?: string;
   usage?: AiLlmUsage;
   error?: string;
 }

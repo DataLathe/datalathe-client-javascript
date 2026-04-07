@@ -2,7 +2,7 @@ export { DatalatheClient } from "./client.js";
 export { ChipsApi } from "./chips.js";
 export { QueriesApi, type GenerateReportResult } from "./queries.js";
 export { ConnectionsApi } from "./connections.js";
-export { AiApi } from "./ai.js";
+export { AiApi, AiConversation } from "./ai.js";
 export { ProfilerApi } from "./profiler.js";
 export { DatalatheResultSet } from "./results/result-set.js";
 export {

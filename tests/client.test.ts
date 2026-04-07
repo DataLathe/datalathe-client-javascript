@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { DatalatheClient } from "../src/client.js";
+import { AiConversation } from "../src/ai.js";
 import { DatalatheResultSet } from "../src/results/result-set.js";
 import { DatalatheApiError, DatalatheStageError } from "../src/errors.js";
 import { createMockFetch } from "./helpers.js";
@@ -349,5 +350,141 @@ describe("DatalatheClient", () => {
     expect(calls[0].url).toBe(
       "http://localhost:8080/lathe/stage/data",
     );
+  });
+
+  it("testAiQueryWithSessionId", async () => {
+    const serverResponse = {
+      request_id: "req1",
+      explanation: "Total revenue is $1M",
+      generated_sql: "SELECT SUM(revenue) FROM sales",
+      assistant_turn: { role: "assistant", content: "Total revenue is $1M" },
+      session_id: "sess-abc",
+    };
+
+    const { fetch, calls } = createMockFetch([
+      { status: 200, body: serverResponse },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    const result = await client.ai.query({
+      contextId: "ctx1",
+      credentialId: "cred1",
+      userQuestion: "What is total revenue?",
+      sessionId: "sess-abc",
+    });
+
+    expect(result.sessionId).toBe("sess-abc");
+    expect(result.assistantTurn).toEqual({ role: "assistant", content: "Total revenue is $1M" });
+
+    const body = calls[0].body as Record<string, unknown>;
+    expect(body.session_id).toBe("sess-abc");
+    expect(body.context_id).toBe("ctx1");
+  });
+
+  it("testAiConversationHelper", async () => {
+    const response1 = {
+      request_id: "req1",
+      explanation: "Revenue is $1M",
+      assistant_turn: { role: "assistant", content: "Revenue is $1M" },
+    };
+    const response2 = {
+      request_id: "req2",
+      explanation: "By region: US $600K, EU $400K",
+      assistant_turn: { role: "assistant", content: "By region: US $600K, EU $400K" },
+    };
+
+    const { fetch, calls } = createMockFetch([
+      { status: 200, body: response1 },
+      { status: 200, body: response2 },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    const conversation = client.ai.conversation("ctx1", "cred1");
+
+    expect(conversation).toBeInstanceOf(AiConversation);
+
+    const r1 = await conversation.ask("What is total revenue?");
+    expect(r1.explanation).toBe("Revenue is $1M");
+
+    // First call should have no conversation history
+    const body1 = calls[0].body as Record<string, unknown>;
+    expect(body1.conversation_history).toBeUndefined();
+
+    const r2 = await conversation.ask("Break that down by region");
+    expect(r2.explanation).toBe("By region: US $600K, EU $400K");
+
+    // Second call should include history from first exchange
+    const body2 = calls[1].body as Record<string, unknown>;
+    expect(body2.conversation_history).toEqual([
+      { role: "user", content: "What is total revenue?" },
+      { role: "assistant", content: "Revenue is $1M" },
+    ]);
+
+    // History should now have 4 turns
+    const history = conversation.getHistory();
+    expect(history).toHaveLength(4);
+    expect(history[0]).toEqual({ role: "user", content: "What is total revenue?" });
+    expect(history[3]).toEqual({ role: "assistant", content: "By region: US $600K, EU $400K" });
+  });
+
+  it("testAiConversationClear", async () => {
+    const response = {
+      request_id: "req1",
+      explanation: "Answer",
+      assistant_turn: { role: "assistant", content: "Answer" },
+    };
+
+    const { fetch } = createMockFetch([
+      { status: 200, body: response },
+      { status: 200, body: response },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    const conversation = client.ai.conversation("ctx1", "cred1");
+
+    await conversation.ask("Question 1");
+    expect(conversation.getHistory()).toHaveLength(2);
+
+    conversation.clear();
+    expect(conversation.getHistory()).toHaveLength(0);
+  });
+
+  it("testDeleteAiSession", async () => {
+    const { fetch, calls } = createMockFetch([
+      { status: 200, body: {} },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    await client.ai.deleteSession("sess-abc");
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0].url).toBe("http://localhost:8080/lathe/ai/sessions/sess-abc");
+    expect(calls[0].init.method).toBe("DELETE");
+  });
+
+  it("testAiQueryWithoutCredentialId", async () => {
+    const serverResponse = {
+      request_id: "req1",
+      explanation: "Answer",
+      session_id: "sess-abc",
+    };
+
+    const { fetch, calls } = createMockFetch([
+      { status: 200, body: serverResponse },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    const result = await client.ai.query({
+      contextId: "ctx1",
+      userQuestion: "Question",
+      sessionId: "sess-abc",
+    });
+
+    expect(result.sessionId).toBe("sess-abc");
+
+    // credential_id should not be in the wire body
+    const body = calls[0].body as Record<string, unknown>;
+    expect(body.credential_id).toBeUndefined();
+    expect(body.context_id).toBe("ctx1");
   });
 });

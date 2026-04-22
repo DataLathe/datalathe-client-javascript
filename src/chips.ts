@@ -168,6 +168,16 @@ export class ChipsApi {
     return this.http.get<ChipsResponse>("/lathe/chips");
   }
 
+  /**
+   * Fetches a single chip (with sub-chips, metadata, and tags) by ID.
+   * Throws ChipNotFoundError if the chip does not exist.
+   */
+  async get(chipId: string): Promise<ChipsResponse> {
+    return this.http.get<ChipsResponse>(
+      `/lathe/chips/${encodeURIComponent(chipId)}`,
+    );
+  }
+
   async search(
     tableName?: string,
     partitionValue?: string,

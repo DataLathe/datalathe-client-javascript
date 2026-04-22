@@ -1,7 +1,43 @@
 import { JSONParser } from "@streamparser/json";
-import { DatalatheApiError } from "./errors.js";
+import { ChipNotFoundError, DatalatheApiError } from "./errors.js";
 import { snakeToCamelKeys } from "./transform.js";
 import type { DatalatheClientOptions } from "./types.js";
+
+/**
+ * Inspects a failed HTTP response body and throws the most specific error
+ * available. Falls back to DatalatheApiError for unrecognized failures.
+ */
+function throwForFailure(
+  method: string,
+  path: string,
+  status: number,
+  body: string,
+): never {
+  if (status === 404 && body) {
+    try {
+      const parsed = JSON.parse(body) as {
+        error?: string;
+        error_code?: string;
+        chip_id?: string;
+      };
+      if (parsed.error_code === "chip_not_found") {
+        throw new ChipNotFoundError(
+          parsed.error ?? "Chip not available",
+          parsed.chip_id ?? null,
+          body,
+        );
+      }
+    } catch (e) {
+      if (e instanceof ChipNotFoundError) throw e;
+      // body wasn't JSON — fall through to generic error
+    }
+  }
+  throw new DatalatheApiError(
+    `${method} ${path} failed: ${status} ${body}`,
+    status,
+    body,
+  );
+}
 
 /**
  * Internal HTTP transport shared by all sub-modules.
@@ -70,11 +106,7 @@ export class HttpClient {
 
       if (!response.ok) {
         const body = await response.text();
-        throw new DatalatheApiError(
-          `GET ${path} failed: ${response.status} ${body}`,
-          response.status,
-          body,
-        );
+        throwForFailure("GET", path, response.status, body);
       }
 
       return this.parseJsonStream<T>(response);
@@ -97,11 +129,7 @@ export class HttpClient {
 
       if (!response.ok) {
         const body = await response.text();
-        throw new DatalatheApiError(
-          `DELETE ${path} failed: ${response.status} ${body}`,
-          response.status,
-          body,
-        );
+        throwForFailure("DELETE", path, response.status, body);
       }
     } finally {
       clearTimeout(timeoutId);
@@ -130,11 +158,7 @@ export class HttpClient {
 
       if (!response.ok) {
         const responseBody = await response.text();
-        throw new DatalatheApiError(
-          `${method} ${path} failed: ${response.status} ${responseBody}`,
-          response.status,
-          responseBody,
-        );
+        throwForFailure(method, path, response.status, responseBody);
       }
 
       return this.parseJsonStream<T>(response);

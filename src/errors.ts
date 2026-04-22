@@ -24,3 +24,20 @@ export class DatalatheStageError extends DatalatheError {
     this.name = "DatalatheStageError";
   }
 }
+
+/**
+ * Thrown when a request references a chip whose data is no longer available
+ * (typically because the underlying S3 object has expired via lifecycle policy).
+ *
+ * Recovery pattern: catch this error, re-stage the chip from your own
+ * source-of-truth using the same chipId, then retry the original call.
+ */
+export class ChipNotFoundError extends DatalatheApiError {
+  public readonly chipId: string | null;
+
+  constructor(message: string, chipId: string | null, responseBody: string) {
+    super(message, 404, responseBody);
+    this.name = "ChipNotFoundError";
+    this.chipId = chipId;
+  }
+}

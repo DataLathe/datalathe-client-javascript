@@ -2,7 +2,11 @@ import { describe, it, expect } from "vitest";
 import { DatalatheClient } from "../src/client.js";
 import { AiConversation } from "../src/ai.js";
 import { DatalatheResultSet } from "../src/results/result-set.js";
-import { DatalatheApiError, DatalatheStageError } from "../src/errors.js";
+import {
+  ChipNotFoundError,
+  DatalatheApiError,
+  DatalatheStageError,
+} from "../src/errors.js";
 import { createMockFetch } from "./helpers.js";
 
 describe("DatalatheClient", () => {
@@ -486,5 +490,69 @@ describe("DatalatheClient", () => {
     const body = calls[0].body as Record<string, unknown>;
     expect(body.credential_id).toBeUndefined();
     expect(body.context_id).toBe("ctx1");
+  });
+
+  it("throws ChipNotFoundError on 404 with chip_not_found body", async () => {
+    const { fetch } = createMockFetch([
+      {
+        status: 404,
+        body: {
+          error: "Chip 'abc123' is not available (may have expired)",
+          error_code: "chip_not_found",
+          chip_id: "abc123",
+        },
+      },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+
+    await expect(
+      client.queries.generateReport(["abc123"], ["SELECT 1"]),
+    ).rejects.toMatchObject({
+      name: "ChipNotFoundError",
+      chipId: "abc123",
+      statusCode: 404,
+    });
+  });
+
+  it("ChipNotFoundError is catchable as DatalatheApiError (back-compat)", async () => {
+    const { fetch } = createMockFetch([
+      {
+        status: 404,
+        body: {
+          error: "Chip 'xyz' is not available",
+          error_code: "chip_not_found",
+          chip_id: "xyz",
+        },
+      },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+
+    let caught: unknown;
+    try {
+      await client.queries.generateReport(["xyz"], ["SELECT 1"]);
+    } catch (e) {
+      caught = e;
+    }
+    expect(caught).toBeInstanceOf(ChipNotFoundError);
+    expect(caught).toBeInstanceOf(DatalatheApiError);
+  });
+
+  it("falls back to DatalatheApiError on 404 without chip_not_found code", async () => {
+    const { fetch } = createMockFetch([
+      { status: 404, body: { error: "Some other 404" } },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+
+    let caught: unknown;
+    try {
+      await client.queries.generateReport(["abc"], ["SELECT 1"]);
+    } catch (e) {
+      caught = e;
+    }
+    expect(caught).toBeInstanceOf(DatalatheApiError);
+    expect(caught).not.toBeInstanceOf(ChipNotFoundError);
   });
 });

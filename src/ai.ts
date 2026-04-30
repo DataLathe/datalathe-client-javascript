@@ -76,9 +76,8 @@ export class AiApi {
   }
 
   /**
-   * Sends a natural-language question to the agent endpoint, which iteratively
-   * calls read-only tools against the configured chips before producing a
-   * final answer (with optional attachments and a chain-of-thought trace).
+   * Use this when the model needs to explore chip data with read-only tools
+   * before answering; use {@link AiApi.query} for direct text-to-SQL.
    */
   async agent(request: AgentRequest): Promise<AgentResponse> {
     return this.http.postRaw<AgentResponse>("/lathe/ai/agent", {

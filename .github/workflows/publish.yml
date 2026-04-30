@@ -36,6 +36,11 @@ jobs:
           registry-url: "https://registry.npmjs.org"
           cache: npm
 
+      # npm trusted publishing (auto-detect OIDC) requires npm 11.5.1+;
+      # setup-node@v4 ships an older npm.
+      - name: Upgrade npm
+        run: npm install -g npm@latest
+
       - name: Verify tag matches package version
         # Catches the failure mode where v1.5.0 is pushed but package.json
         # still says 1.4.3 — would publish the wrong version otherwise.

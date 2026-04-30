@@ -60,4 +60,12 @@ export {
   type AiVisualizationConfig,
   type AiLlmUsage,
   type AiQueryResponse,
+  type AgentRequest,
+  type AgentResponse,
+  type AgentOptions,
+  type AgentUsage,
+  type Attachment,
+  type ToolCallTrace,
+  type NarrationEntry,
+  type StopReason,
 } from "./types.js";

@@ -2,7 +2,9 @@ name: Publish to npm
 
 # Triggers on `vX.Y.Z` tag push (or manual dispatch). Verifies the tag
 # matches `package.json` version, runs typecheck + tests + build, then
-# publishes the public package with provenance.
+# publishes the public package with provenance via npm trusted publishing
+# (OIDC). No NPM_TOKEN required — npm picks up the OIDC token from the
+# runner.
 
 on:
   push:
@@ -61,5 +63,3 @@ jobs:
 
       - name: Publish
         run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

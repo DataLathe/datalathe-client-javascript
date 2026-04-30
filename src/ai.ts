@@ -7,6 +7,9 @@ import type {
   UpdateAiContextRequest,
   AiQueryRequest,
   AiQueryResponse,
+  AgentRequest,
+  AgentResponse,
+  AgentOptions,
   ConversationTurn,
 } from "./types.js";
 
@@ -19,6 +22,7 @@ export class AiApi {
       provider: request.provider,
       api_key: request.apiKey,
       default_model: request.defaultModel,
+      ...(request.region !== undefined ? { region: request.region } : {}),
     });
   }
 
@@ -71,6 +75,25 @@ export class AiApi {
     });
   }
 
+  /**
+   * Use this when the model needs to explore chip data with read-only tools
+   * before answering; use {@link AiApi.query} for direct text-to-SQL.
+   */
+  async agent(request: AgentRequest): Promise<AgentResponse> {
+    return this.http.postRaw<AgentResponse>("/lathe/ai/agent", {
+      context_id: request.contextId,
+      user_question: request.userQuestion,
+      ...(request.credentialId !== undefined ? { credential_id: request.credentialId } : {}),
+      ...(request.sessionId !== undefined ? { session_id: request.sessionId } : {}),
+      ...(request.conversationHistory !== undefined ? { conversation_history: request.conversationHistory } : {}),
+      ...(request.model !== undefined ? { model: request.model } : {}),
+      ...(request.tenantId !== undefined ? { tenant_id: request.tenantId } : {}),
+      ...(request.agentOptions !== undefined
+        ? { agent_options: agentOptionsToWire(request.agentOptions) }
+        : {}),
+    });
+  }
+
   async deleteSession(sessionId: string): Promise<void> {
     return this.http.del(`/lathe/ai/sessions/${encodeURIComponent(sessionId)}`);
   }
@@ -115,4 +138,15 @@ export class AiConversation {
   clear(): void {
     this.history.length = 0;
   }
+}
+
+function agentOptionsToWire(opts: AgentOptions): Record<string, unknown> {
+  const wire: Record<string, unknown> = {};
+  if (opts.maxIterations !== undefined) wire.max_iterations = opts.maxIterations;
+  if (opts.maxToolCalls !== undefined) wire.max_tool_calls = opts.maxToolCalls;
+  if (opts.maxWallClockSecs !== undefined) wire.max_wall_clock_secs = opts.maxWallClockSecs;
+  if (opts.maxAttachments !== undefined) wire.max_attachments = opts.maxAttachments;
+  if (opts.runSqlRowCap !== undefined) wire.run_sql_row_cap = opts.runSqlRowCap;
+  if (opts.maxTotalInputTokens !== undefined) wire.max_total_input_tokens = opts.maxTotalInputTokens;
+  return wire;
 }

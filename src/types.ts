@@ -292,13 +292,16 @@ export interface AiCredential {
   provider: string;
   defaultModel: string;
   createdAt: number;
+  region?: string;
 }
 
 export interface CreateAiCredentialRequest {
   name: string;
   provider: string;
   apiKey: string;
-  defaultModel?: string;
+  defaultModel: string;
+  /** Required when provider is "bedrock". */
+  region?: string;
 }
 
 export interface AiContext {
@@ -372,4 +375,91 @@ export interface AiQueryResponse {
   sessionId?: string;
   usage?: AiLlmUsage;
   error?: string;
+  errorCode?: string;
+  chipId?: string;
+}
+
+// AI Agent-mode types
+
+/** Override per-request budget caps for agent-mode tool loop. */
+export interface AgentOptions {
+  /** Force-final after N tool-using iterations (soft cap). */
+  maxIterations?: number;
+  /** Force-final after N total tool calls (soft cap). */
+  maxToolCalls?: number;
+  /** Abort after N seconds of wall-clock time (hard cap). */
+  maxWallClockSecs?: number;
+  /** Force-final once N attachments have been emitted (soft cap). */
+  maxAttachments?: number;
+  /** Truncate run_sql results to this many rows. */
+  runSqlRowCap?: number;
+  /** Abort once cumulative input token usage exceeds this (hard cap). */
+  maxTotalInputTokens?: number;
+}
+
+export interface AgentRequest {
+  contextId: string;
+  userQuestion: string;
+  credentialId?: string;
+  sessionId?: string;
+  conversationHistory?: ConversationTurn[];
+  model?: string;
+  tenantId?: string;
+  agentOptions?: AgentOptions;
+}
+
+export interface Attachment {
+  caption: string;
+  sql: string;
+  data: AiQueryResultData;
+  visualization?: AiVisualizationConfig;
+}
+
+export interface ToolCallTrace {
+  iteration: number;
+  tool: string;
+  args: unknown;
+  resultSummary: string;
+  durationMs: number;
+  isError: boolean;
+}
+
+/**
+ * Natural-language reasoning emitted between tool calls. Pair with
+ * `toolCalls` (which carries iteration + ordering) to render the full
+ * chain of thought.
+ */
+export type NarrationEntry = {
+  kind: "assistant_text";
+  iteration: number;
+  text: string;
+};
+
+export type StopReason =
+  | "end_turn"
+  | "max_iterations"
+  | "max_tool_calls"
+  | "max_attachments"
+  | "agent_budget_exhausted";
+
+export interface AgentUsage {
+  inputTokens: number;
+  outputTokens: number;
+  model: string;
+  iterations: number;
+  toolCalls: number;
+}
+
+export interface AgentResponse {
+  requestId: string;
+  answer?: string;
+  attachments: Attachment[];
+  toolCalls: ToolCallTrace[];
+  narration: NarrationEntry[];
+  sessionId?: string;
+  stopReason?: StopReason;
+  usage?: AgentUsage;
+  error?: string;
+  errorCode?: string;
+  chipId?: string;
 }

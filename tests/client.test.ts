@@ -555,4 +555,191 @@ describe("DatalatheClient", () => {
     expect(caught).toBeInstanceOf(DatalatheApiError);
     expect(caught).not.toBeInstanceOf(ChipNotFoundError);
   });
+
+  it("registerCredential sends region for bedrock", async () => {
+    const { fetch, calls } = createMockFetch([
+      {
+        status: 200,
+        body: {
+          credential_id: "cred1",
+          name: "bedrock-prod",
+          provider: "bedrock",
+          default_model: "anthropic.claude-sonnet-4-5-20250929-v1:0",
+          created_at: 1,
+          region: "us-west-2",
+        },
+      },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    const cred = await client.ai.registerCredential({
+      name: "bedrock-prod",
+      provider: "bedrock",
+      apiKey: "secret",
+      defaultModel: "anthropic.claude-sonnet-4-5-20250929-v1:0",
+      region: "us-west-2",
+    });
+
+    expect(cred.region).toBe("us-west-2");
+    const body = calls[0].body as Record<string, unknown>;
+    expect(body.region).toBe("us-west-2");
+    expect(body.default_model).toBe("anthropic.claude-sonnet-4-5-20250929-v1:0");
+    expect(body.api_key).toBe("secret");
+  });
+
+  it("registerCredential omits region when not provided", async () => {
+    const { fetch, calls } = createMockFetch([
+      {
+        status: 200,
+        body: {
+          credential_id: "cred1",
+          name: "anthropic-prod",
+          provider: "anthropic",
+          default_model: "claude-sonnet-4-5-20250929",
+          created_at: 1,
+        },
+      },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    await client.ai.registerCredential({
+      name: "anthropic-prod",
+      provider: "anthropic",
+      apiKey: "secret",
+      defaultModel: "claude-sonnet-4-5-20250929",
+    });
+
+    const body = calls[0].body as Record<string, unknown>;
+    expect(body.region).toBeUndefined();
+  });
+
+  it("agent posts to /lathe/ai/agent and parses full response", async () => {
+    const serverResponse = {
+      request_id: "req1",
+      answer: "LATAM had the highest growth at 23%.",
+      attachments: [
+        {
+          caption: "Growth by region",
+          sql: "SELECT region, growth FROM sales",
+          data: {
+            columns: [
+              { name: "region", data_type: "Utf8" },
+              { name: "growth", data_type: "Float64" },
+            ],
+            rows: [["LATAM", "0.23"]],
+          },
+          visualization: {
+            type: "bar",
+            x_axis: "region",
+            y_axis: "growth",
+          },
+        },
+      ],
+      tool_calls: [
+        {
+          iteration: 1,
+          tool: "list_tables",
+          args: {},
+          result_summary: "Found 3 tables",
+          duration_ms: 12,
+          is_error: false,
+        },
+      ],
+      narration: [
+        { kind: "assistant_text", iteration: 1, text: "Let me look at the tables." },
+      ],
+      session_id: "sess-abc",
+      stop_reason: "end_turn",
+      usage: {
+        input_tokens: 1500,
+        output_tokens: 200,
+        model: "claude-sonnet-4-5-20250929",
+        iterations: 2,
+        tool_calls: 1,
+      },
+    };
+
+    const { fetch, calls } = createMockFetch([{ status: 200, body: serverResponse }]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    const result = await client.ai.agent({
+      contextId: "ctx1",
+      credentialId: "cred1",
+      userQuestion: "Which region had the highest growth?",
+      sessionId: "sess-abc",
+      agentOptions: { maxIterations: 5, runSqlRowCap: 1000 },
+    });
+
+    expect(calls[0].url).toBe("http://localhost:8080/lathe/ai/agent");
+    expect(result.requestId).toBe("req1");
+    expect(result.answer).toBe("LATAM had the highest growth at 23%.");
+    expect(result.stopReason).toBe("end_turn");
+    expect(result.attachments).toHaveLength(1);
+    expect(result.attachments[0].caption).toBe("Growth by region");
+    expect(result.attachments[0].visualization?.xAxis).toBe("region");
+    expect(result.toolCalls).toHaveLength(1);
+    expect(result.toolCalls[0].iteration).toBe(1);
+    expect(result.toolCalls[0].resultSummary).toBe("Found 3 tables");
+    expect(result.toolCalls[0].isError).toBe(false);
+    expect(result.narration[0].kind).toBe("assistant_text");
+    expect(result.usage?.toolCalls).toBe(1);
+    expect(result.usage?.inputTokens).toBe(1500);
+
+    const body = calls[0].body as Record<string, unknown>;
+    expect(body.context_id).toBe("ctx1");
+    expect(body.user_question).toBe("Which region had the highest growth?");
+    expect(body.credential_id).toBe("cred1");
+    expect(body.session_id).toBe("sess-abc");
+    const opts = body.agent_options as Record<string, unknown>;
+    expect(opts.max_iterations).toBe(5);
+    expect(opts.run_sql_row_cap).toBe(1000);
+    expect(opts.max_tool_calls).toBeUndefined();
+  });
+
+  it("agent omits agent_options when not provided", async () => {
+    const { fetch, calls } = createMockFetch([
+      {
+        status: 200,
+        body: {
+          request_id: "req1",
+          answer: "ok",
+          attachments: [],
+          tool_calls: [],
+          narration: [],
+        },
+      },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    await client.ai.agent({
+      contextId: "ctx1",
+      userQuestion: "Hi",
+    });
+
+    const body = calls[0].body as Record<string, unknown>;
+    expect(body.agent_options).toBeUndefined();
+    expect(body.credential_id).toBeUndefined();
+  });
+
+  it("agent surfaces ChipNotFoundError on 404", async () => {
+    const { fetch } = createMockFetch([
+      {
+        status: 404,
+        body: {
+          error: "Chip 'lost' is not available (may have expired)",
+          error_code: "chip_not_found",
+          chip_id: "lost",
+        },
+      },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    await expect(
+      client.ai.agent({ contextId: "ctx1", userQuestion: "Q" }),
+    ).rejects.toMatchObject({
+      name: "ChipNotFoundError",
+      chipId: "lost",
+      statusCode: 404,
+    });
+  });
 });

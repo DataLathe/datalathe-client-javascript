@@ -1,0 +1,65 @@
+name: Publish to npm
+
+# Triggers on `vX.Y.Z` tag push (or manual dispatch). Verifies the tag
+# matches `package.json` version, runs typecheck + tests + build, then
+# publishes the public package with provenance.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Tag or ref to publish (e.g. v1.5.0)"
+        required: true
+
+permissions:
+  contents: read
+  id-token: write  # required for npm provenance
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref || github.ref }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+          cache: npm
+
+      - name: Verify tag matches package version
+        # Catches the failure mode where v1.5.0 is pushed but package.json
+        # still says 1.4.3 — would publish the wrong version otherwise.
+        run: |
+          TAG="${{ github.event.inputs.ref || github.ref_name }}"
+          TAG_VERSION="${TAG#v}"
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+            echo "::error::tag version ($TAG_VERSION) does not match package.json ($PKG_VERSION)"
+            exit 1
+          fi
+          echo "tag and package both at $PKG_VERSION ✓"
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run lint
+
+      - name: Test
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Publish
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

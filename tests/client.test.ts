@@ -212,6 +212,82 @@ describe("DatalatheClient", () => {
     );
   });
 
+  it("testCreateWithDetailsReturnsStreamingMetrics", async () => {
+    const { fetch, calls } = createMockFetch([
+      {
+        status: 200,
+        body: {
+          chip_id: "chip1",
+          error: null,
+          total_rows: 1234,
+          elapsed_ms: 567,
+        },
+      },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+
+    const response = await client.chips.createWithDetails({
+      databaseName: "test_db",
+      query: "SELECT * FROM users",
+      tableName: "test_table",
+      streaming: true,
+    });
+
+    expect(response.chipId).toBe("chip1");
+    expect(response.totalRows).toBe(1234);
+    expect(response.elapsedMs).toBe(567);
+    expect(response.error).toBeNull();
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0].url).toBe("http://localhost:8080/lathe/stage/data");
+    const body = calls[0].body as Record<string, unknown>;
+    expect(body.source_type).toBe("MYSQL");
+    const sourceRequest = body.source_request as Record<string, unknown>;
+    expect(sourceRequest.streaming).toBe(true);
+    expect(sourceRequest.database_name).toBe("test_db");
+  });
+
+  it("testCreateMultipleWithDetailsReturnsStreamingMetrics", async () => {
+    const { fetch, calls } = createMockFetch([
+      {
+        status: 200,
+        body: {
+          chip_id: "chip1",
+          error: null,
+          total_rows: 1000,
+          elapsed_ms: 250,
+        },
+      },
+      {
+        status: 200,
+        body: {
+          chip_id: "chip2",
+          error: null,
+          total_rows: 2000,
+          elapsed_ms: 500,
+        },
+      },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+
+    const responses = await client.chips.createMultipleWithDetails([
+      { databaseName: "db1", query: "SELECT * FROM users", tableName: "users" },
+      { databaseName: "db1", query: "SELECT * FROM orders", tableName: "orders" },
+    ]);
+
+    expect(responses).toHaveLength(2);
+    expect(responses[0].chipId).toBe("chip1");
+    expect(responses[0].totalRows).toBe(1000);
+    expect(responses[0].elapsedMs).toBe(250);
+    expect(responses[1].chipId).toBe("chip2");
+    expect(responses[1].totalRows).toBe(2000);
+    expect(responses[1].elapsedMs).toBe(500);
+
+    expect(calls).toHaveLength(2);
+  });
+
   it("testGetDatabases", async () => {
     // Server returns snake_case
     const serverResponse = [
@@ -732,56 +808,6 @@ describe("DatalatheClient", () => {
     const sr = body.source_request as Record<string, unknown>;
     expect(sr.streaming).toBeUndefined();
     expect(sr.partition_column).toBeUndefined();
-  });
-
-  it("stageData deserializes totalRows and elapsedMs from snake_case response", async () => {
-    const { fetch } = createMockFetch([
-      {
-        status: 200,
-        body: {
-          chip_id: "chip1",
-          error: null,
-          total_rows: 200_000_000,
-          elapsed_ms: 1_843_121,
-        },
-      },
-    ]);
-
-    // Intercept at the http layer via a wrapper fetch that exposes the
-    // parsed response without requiring access to private fields.
-    let parsedChipId: string | undefined;
-    let parsedTotalRows: number | undefined;
-    let parsedElapsedMs: number | undefined;
-
-    const wrappedFetch: typeof globalThis.fetch = async (url, init) => {
-      const response = await fetch(url, init);
-      // Clone so we can inspect the parsed form after the real consumer reads it
-      return response;
-    };
-
-    // Patch: replace with a fetch that captures the JSON we return so we
-    // can verify snakeToCamelKeys ran on the response. The cleanest way is
-    // to expose a stageData method that returns StageDataResponse directly.
-    // ChipsApi.createMultiple calls postRaw and only returns chipId, so we
-    // need to reach inside. Instead, create a thin adapter around HttpClient.
-    const client = new DatalatheClient("http://localhost:8080", {
-      fetch: wrappedFetch,
-    });
-
-    // We verify via snakeToCamelKeys unit: the transform converts
-    // total_rows → totalRows and elapsed_ms → elapsedMs. That function is
-    // tested here with a real HTTP round-trip to confirm the pipeline runs.
-    const { snakeToCamelKeys } = await import("../src/transform.js");
-    const wireResponse = {
-      chip_id: "chip1",
-      error: null,
-      total_rows: 200_000_000,
-      elapsed_ms: 1_843_121,
-    };
-    const camelized = snakeToCamelKeys<import("../src/types.js").StageDataResponse>(wireResponse);
-    expect(camelized.totalRows).toBe(200_000_000);
-    expect(camelized.elapsedMs).toBe(1_843_121);
-    expect(camelized.chipId).toBe("chip1");
   });
 
   it("agent omits agent_options when not provided", async () => {

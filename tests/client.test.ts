@@ -405,6 +405,33 @@ describe("DatalatheClient", () => {
     expect(calls[0].init.method).toBe("GET");
   });
 
+  it("testListChipsSurfacesUnreadableChipIds", async () => {
+    const chipsResponse = {
+      chips: [
+        {
+          chip_id: "good-1",
+          sub_chip_id: "sub-1",
+          table_name: "users",
+          partition_value: "default",
+          created_at: 1700000000,
+        },
+      ],
+      metadata: [],
+      unreadable_chip_ids: ["bad-1", "bad-2"],
+    };
+
+    const { fetch } = createMockFetch([
+      { status: 200, body: chipsResponse },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    const result = await client.chips.list();
+
+    expect(result.chips).toHaveLength(1);
+    expect(result.chips[0].chipId).toBe("good-1");
+    expect(result.unreadableChipIds).toEqual(["bad-1", "bad-2"]);
+  });
+
   it("testGetApiError", async () => {
     const { fetch } = createMockFetch([
       { status: 404, body: { error: "Not found" } },

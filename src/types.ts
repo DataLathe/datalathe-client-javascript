@@ -35,6 +35,10 @@ export interface SourceRequest {
   sourceChipIds?: string[];
   partition?: Partition;
   columnReplace?: Record<string, string>;
+  /** Opt-in streaming ingest (MySQL only). Default behavior preserved when omitted. */
+  streaming?: boolean;
+  /** Numeric PK column name; enables 8-way keyset-parallel chunking when combined with streaming. */
+  partitionColumn?: string;
 }
 
 export interface S3StorageConfig {
@@ -46,6 +50,10 @@ export interface S3StorageConfig {
 export interface StageDataResponse {
   chipId: string;
   error: string | null;
+  /** Total rows loaded. Only present on streaming-path responses. */
+  totalRows?: number;
+  /** Wall-clock load time in ms. Only present on streaming-path responses. */
+  elapsedMs?: number;
 }
 
 export interface ReportResultEntry {

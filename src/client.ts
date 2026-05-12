@@ -98,8 +98,10 @@ export class DatalatheClient {
     chipName?: string,
     columnReplace?: Record<string, string>,
     storageConfig?: S3StorageConfig,
+    streaming?: boolean,
+    partitionColumn?: string,
   ): Promise<string> {
-    return this.chips.create(sourceName, query, tableName, partition, chipName, columnReplace, storageConfig);
+    return this.chips.create(sourceName, query, tableName, partition, chipName, columnReplace, storageConfig, streaming, partitionColumn);
   }
 
   /** @deprecated Use client.chips.createFromFile() */

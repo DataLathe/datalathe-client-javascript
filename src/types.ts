@@ -128,6 +128,12 @@ export interface ChipsResponse {
   chips: Chip[];
   metadata: ChipMetadata[];
   tags?: ChipTag[];
+  /**
+   * Chip IDs whose metadata could not be read back from the chip-manager.
+   * Always populated by v1.7.1+ engines (empty array when none); absent on
+   * older engines.
+   */
+  unreadableChipIds?: string[];
 }
 
 export interface ConnectionInfo {

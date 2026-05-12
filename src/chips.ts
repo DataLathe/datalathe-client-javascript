@@ -136,9 +136,6 @@ export class ChipsApi {
     return chips[0];
   }
 
-  /**
-   * Stages data from multiple source requests and returns chip IDs.
-   */
   async createMultiple(
     sources: SourceRequest[],
     chipId?: string,
@@ -147,7 +144,45 @@ export class ChipsApi {
     storageConfig?: S3StorageConfig,
     tags?: Record<string, string>,
   ): Promise<string[]> {
-    const chipIds: string[] = [];
+    const responses = await this.createMultipleWithDetails(
+      sources,
+      chipId,
+      sourceType,
+      chipName,
+      storageConfig,
+      tags,
+    );
+    return responses.map((r) => r.chipId);
+  }
+
+  async createWithDetails(
+    source: SourceRequest,
+    chipId?: string,
+    sourceType: SourceType = SourceType.MYSQL,
+    chipName?: string,
+    storageConfig?: S3StorageConfig,
+    tags?: Record<string, string>,
+  ): Promise<StageDataResponse> {
+    const responses = await this.createMultipleWithDetails(
+      [source],
+      chipId,
+      sourceType,
+      chipName,
+      storageConfig,
+      tags,
+    );
+    return responses[0];
+  }
+
+  async createMultipleWithDetails(
+    sources: SourceRequest[],
+    chipId?: string,
+    sourceType: SourceType = SourceType.MYSQL,
+    chipName?: string,
+    storageConfig?: S3StorageConfig,
+    tags?: Record<string, string>,
+  ): Promise<StageDataResponse[]> {
+    const responses: StageDataResponse[] = [];
     for (const source of sources) {
       const wireBody = {
         source_type: sourceType,
@@ -163,9 +198,9 @@ export class ChipsApi {
           `Failed to stage data: ${response.error}`,
         );
       }
-      chipIds.push(response.chipId);
+      responses.push(response);
     }
-    return chipIds;
+    return responses;
   }
 
   async list(): Promise<ChipsResponse> {

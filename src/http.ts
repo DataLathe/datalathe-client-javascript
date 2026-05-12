@@ -55,27 +55,59 @@ export class HttpClient {
     this.timeout = options?.timeout ?? 30_000;
   }
 
-  /**
-   * Parses a JSON response body using streaming to avoid V8's string length limit.
-   * Falls back to response.json() if the body stream is not available.
-   */
-  private async parseJsonStream<T>(response: Response): Promise<T> {
+  private async parseJsonStream<T>(
+    method: string,
+    path: string,
+    response: Response,
+  ): Promise<T> {
+    const fail = (detail: string): never => {
+      throw new DatalatheApiError(
+        `${method} ${path} returned ${response.status} with an unreadable JSON body: ${detail}`,
+        response.status,
+        detail,
+      );
+    };
+
     const body = response.body;
     if (!body) {
-      return snakeToCamelKeys<T>(await response.json());
+      const text = await response.text();
+      if (text.trim() === "") return fail("empty body");
+      try {
+        return snakeToCamelKeys<T>(JSON.parse(text));
+      } catch {
+        return fail(text);
+      }
     }
 
     return new Promise<T>((resolve, reject) => {
       const parser = new JSONParser();
       let result: unknown;
+      let sawValue = false;
 
       parser.onValue = ({ value, stack }) => {
         if (stack.length === 0) {
           result = value;
+          sawValue = true;
         }
       };
-      parser.onEnd = () => resolve(snakeToCamelKeys<T>(result));
-      parser.onError = (err: Error) => reject(err);
+      parser.onEnd = () => {
+        if (!sawValue) {
+          try {
+            fail("empty body");
+          } catch (e) {
+            reject(e);
+          }
+          return;
+        }
+        resolve(snakeToCamelKeys<T>(result));
+      };
+      parser.onError = (err: Error) => {
+        try {
+          fail(err.message);
+        } catch (e) {
+          reject(e);
+        }
+      };
 
       const reader = body.getReader();
       const pump = async () => {
@@ -88,7 +120,13 @@ export class HttpClient {
           parser.write(value);
         }
       };
-      pump().catch(reject);
+      pump().catch((e) => {
+        try {
+          fail(e instanceof Error ? e.message : String(e));
+        } catch (wrapped) {
+          reject(wrapped);
+        }
+      });
     });
   }
 
@@ -109,7 +147,7 @@ export class HttpClient {
         throwForFailure("GET", path, response.status, body);
       }
 
-      return this.parseJsonStream<T>(response);
+      return this.parseJsonStream<T>("GET", path, response);
     } finally {
       clearTimeout(timeoutId);
     }
@@ -161,7 +199,7 @@ export class HttpClient {
         throwForFailure(method, path, response.status, responseBody);
       }
 
-      return this.parseJsonStream<T>(response);
+      return this.parseJsonStream<T>(method, path, response);
     } finally {
       clearTimeout(timeoutId);
     }

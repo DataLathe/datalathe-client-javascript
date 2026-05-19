@@ -5,7 +5,7 @@ import type {
   ReportTiming,
 } from "./types.js";
 import { SourceType, ReportType } from "./types.js";
-import { DatalatheApiError } from "./errors.js";
+import { DatalatheApiError, DatalatheQueryError } from "./errors.js";
 
 export interface GenerateReportResult {
   results: Map<number, ReportResultEntry>;
@@ -17,6 +17,10 @@ export class QueriesApi {
 
   /**
    * Executes queries against chip IDs.
+   *
+   * When `raiseOnQueryError` is true (the default), throws `DatalatheQueryError`
+   * if any query fails at execution time. Pass false to inspect each entry's
+   * `error` field on the returned results instead.
    */
   async generateReport(
     chipIds: string[],
@@ -24,6 +28,7 @@ export class QueriesApi {
     sourceType: SourceType = SourceType.LOCAL,
     transformQuery?: boolean,
     returnTransformedQuery?: boolean,
+    raiseOnQueryError = true,
   ): Promise<GenerateReportResult> {
     const wireBody = {
       chip_id: chipIds,
@@ -40,6 +45,14 @@ export class QueriesApi {
       for (const [key, entry] of Object.entries(response.result)) {
         results.set(parseInt(key, 10), entry);
       }
+    }
+
+    if (raiseOnQueryError) {
+      const queryErrors = new Map<number, string>();
+      for (const [idx, entry] of results) {
+        if (entry.error != null) queryErrors.set(idx, entry.error);
+      }
+      if (queryErrors.size > 0) throw new DatalatheQueryError(queryErrors);
     }
 
     return { results, timing: response.timing ?? null };

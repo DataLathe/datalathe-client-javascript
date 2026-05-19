@@ -41,3 +41,25 @@ export class ChipNotFoundError extends DatalatheApiError {
     this.chipId = chipId;
   }
 }
+
+/**
+ * Thrown by generateReport when one or more queries fail at execution time.
+ * The engine returns HTTP 200 with the failure in each entry's `error` field;
+ * this surfaces it instead of letting a failed query look like an empty result.
+ *
+ * Pass `raiseOnQueryError: false` to generateReport to suppress this and
+ * inspect `ReportResultEntry.error` on the returned results instead.
+ */
+export class DatalatheQueryError extends DatalatheError {
+  public readonly errors: Map<number, string>;
+
+  constructor(errors: Map<number, string>) {
+    const detail = [...errors.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([idx, msg]) => `query ${idx}: ${msg}`)
+      .join("; ");
+    super(`Query execution failed (${detail})`);
+    this.name = "DatalatheQueryError";
+    this.errors = errors;
+  }
+}

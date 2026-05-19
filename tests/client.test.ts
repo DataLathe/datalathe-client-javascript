@@ -6,6 +6,7 @@ import {
   ChipNotFoundError,
   DatalatheApiError,
   DatalatheStageError,
+  DatalatheQueryError,
 } from "../src/errors.js";
 import { createMockFetch } from "./helpers.js";
 
@@ -119,7 +120,7 @@ describe("DatalatheClient", () => {
     ]);
   });
 
-  it("testQueryWithError", async () => {
+  it("generateReport with raiseOnQueryError=false returns the error entry", async () => {
     const responseJson = {
       result: {
         "0": {
@@ -141,11 +142,82 @@ describe("DatalatheClient", () => {
     const { results } = await client.queries.generateReport(
       ["chip1"],
       ["SELECT * FROM users"],
+      undefined,
+      undefined,
+      undefined,
+      false,
     );
 
     expect(results.size).toBe(1);
     expect(results.get(0)!.error).toBe("Table not found");
     expect(results.get(0)!.result).toBeNull();
+  });
+
+  it("generateReport raises DatalatheQueryError on a failed query", async () => {
+    const { fetch } = createMockFetch([
+      {
+        status: 200,
+        body: {
+          result: {
+            "0": {
+              idx: "0",
+              result: null,
+              error: 'Binder Error: Referenced column "foo" not found',
+              schema: null,
+            },
+          },
+        },
+      },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+
+    let caught: unknown;
+    try {
+      await client.queries.generateReport(["chip1"], ["SELECT foo FROM t"]);
+    } catch (e) {
+      caught = e;
+    }
+
+    expect(caught).toBeInstanceOf(DatalatheQueryError);
+    expect((caught as DatalatheQueryError).errors).toEqual(
+      new Map([[0, 'Binder Error: Referenced column "foo" not found']]),
+    );
+  });
+
+  it("generateReport reports every failed query", async () => {
+    const { fetch } = createMockFetch([
+      {
+        status: 200,
+        body: {
+          result: {
+            "0": { idx: "0", result: [["1"]], error: null, schema: null },
+            "1": { idx: "1", result: null, error: "bad query", schema: null },
+            "2": { idx: "2", result: null, error: "worse query", schema: null },
+          },
+        },
+      },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+
+    let caught: unknown;
+    try {
+      await client.queries.generateReport(
+        ["chip1"],
+        ["SELECT 1", "SELECT bad", "SELECT worse"],
+      );
+    } catch (e) {
+      caught = e;
+    }
+
+    expect(caught).toBeInstanceOf(DatalatheQueryError);
+    expect((caught as DatalatheQueryError).errors).toEqual(
+      new Map([
+        [1, "bad query"],
+        [2, "worse query"],
+      ]),
+    );
   });
 
   it("testStageDataApiError", async () => {

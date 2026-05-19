@@ -10,6 +10,7 @@ export {
   DatalatheApiError,
   DatalatheStageError,
   ChipNotFoundError,
+  DatalatheQueryError,
 } from "./errors.js";
 export { snakeToCamelKeys } from "./transform.js";
 export {

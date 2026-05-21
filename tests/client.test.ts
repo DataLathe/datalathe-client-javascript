@@ -477,6 +477,28 @@ describe("DatalatheClient", () => {
     expect(calls[0].init.method).toBe("GET");
   });
 
+  it("testListChipsSurfacesPartitionColumn", async () => {
+    const chipsResponse = {
+      chips: [],
+      metadata: [
+        {
+          chip_id: "chip1",
+          created_at: 1700000000,
+          description: "pruning-demo",
+          name: "pruning-demo",
+          partition_column: "country",
+        },
+      ],
+    };
+
+    const { fetch } = createMockFetch([{ status: 200, body: chipsResponse }]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    const result = await client.chips.list();
+
+    expect(result.metadata[0].partitionColumn).toBe("country");
+  });
+
   it("testListChipsSurfacesUnreadableChipIds", async () => {
     const chipsResponse = {
       chips: [

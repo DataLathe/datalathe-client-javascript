@@ -116,6 +116,7 @@ export interface ChipMetadata {
   storageBucket?: string;
   storageKeyPrefix?: string;
   ttlDays?: number;
+  partitionColumn?: string;
 }
 
 export interface ChipTag {

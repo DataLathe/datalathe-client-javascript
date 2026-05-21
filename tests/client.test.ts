@@ -871,7 +871,7 @@ describe("DatalatheClient", () => {
     expect(opts.max_tool_calls).toBeUndefined();
   });
 
-  it("stageData sends streaming and partition_column on wire", async () => {
+  it("stageData sends streaming and keyset_column on wire", async () => {
     const { fetch, calls } = createMockFetch([
       { status: 200, body: { chip_id: "chip1", error: null } },
     ]);
@@ -892,10 +892,10 @@ describe("DatalatheClient", () => {
     const body = calls[0].body as Record<string, unknown>;
     const sr = body.source_request as Record<string, unknown>;
     expect(sr.streaming).toBe(true);
-    expect(sr.partition_column).toBe("id");
+    expect(sr.keyset_column).toBe("id");
   });
 
-  it("stageData omits streaming and partition_column when not set", async () => {
+  it("stageData omits streaming and keyset_column when not set", async () => {
     const { fetch, calls } = createMockFetch([
       { status: 200, body: { chip_id: "chip1", error: null } },
     ]);
@@ -906,7 +906,28 @@ describe("DatalatheClient", () => {
     const body = calls[0].body as Record<string, unknown>;
     const sr = body.source_request as Record<string, unknown>;
     expect(sr.streaming).toBeUndefined();
-    expect(sr.partition_column).toBeUndefined();
+    expect(sr.keyset_column).toBeUndefined();
+  });
+
+  it("createFromS3 forwards a partition spec to the wire", async () => {
+    const { fetch, calls } = createMockFetch([
+      { status: 200, body: { chip_id: "chip1", error: null } },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    await client.chips.createFromS3(
+      "s3://bucket/data.parquet",
+      "sales",
+      undefined,
+      undefined,
+      undefined,
+      { partitionBy: "region" },
+    );
+
+    const body = calls[0].body as Record<string, unknown>;
+    const sr = body.source_request as Record<string, unknown>;
+    expect(sr.s3_path).toBe("s3://bucket/data.parquet");
+    expect((sr.partition as Record<string, unknown>).partition_by).toBe("region");
   });
 
   it("agent omits agent_options when not provided", async () => {

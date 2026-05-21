@@ -38,7 +38,7 @@ export interface SourceRequest {
   /** Opt-in streaming ingest (MySQL only). Default behavior preserved when omitted. */
   streaming?: boolean;
   /** Numeric PK column name; enables 8-way keyset-parallel chunking when combined with streaming. */
-  partitionColumn?: string;
+  keysetColumn?: string;
 }
 
 export interface S3StorageConfig {

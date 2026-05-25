@@ -30,7 +30,7 @@ function sourceToWire(s: SourceRequest) {
     partition: partitionToWire(s.partition),
     column_replace: s.columnReplace,
     ...(s.streaming !== undefined ? { streaming: s.streaming } : {}),
-    ...(s.partitionColumn !== undefined ? { partition_column: s.partitionColumn } : {}),
+    ...(s.keysetColumn !== undefined ? { keyset_column: s.keysetColumn } : {}),
   };
 }
 
@@ -58,10 +58,10 @@ export class ChipsApi {
     columnReplace?: Record<string, string>,
     storageConfig?: S3StorageConfig,
     streaming?: boolean,
-    partitionColumn?: string,
+    keysetColumn?: string,
   ): Promise<string> {
     const chips = await this.createMultiple(
-      [{ databaseName: sourceName, tableName, query, partition, columnReplace, streaming, partitionColumn }],
+      [{ databaseName: sourceName, tableName, query, partition, columnReplace, streaming, keysetColumn }],
       undefined,
       SourceType.MYSQL,
       chipName,
@@ -100,9 +100,10 @@ export class ChipsApi {
     chipName?: string,
     columnReplace?: Record<string, string>,
     storageConfig?: S3StorageConfig,
+    partition?: Partition,
   ): Promise<string> {
     const chips = await this.createMultiple(
-      [{ databaseName: "", query: "", s3Path, tableName, columnReplace }],
+      [{ databaseName: "", query: "", s3Path, tableName, partition, columnReplace }],
       undefined,
       SourceType.S3,
       chipName,

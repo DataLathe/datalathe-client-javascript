@@ -23,6 +23,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     environment: npm
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v6

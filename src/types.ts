@@ -410,6 +410,8 @@ export interface AgentOptions {
   runSqlRowCap?: number;
   /** Abort once cumulative input token usage exceeds this (hard cap). */
   maxTotalInputTokens?: number;
+  /** Ask the model for up to 3 suggested follow-up questions (default on). */
+  suggestFollowUps?: boolean;
 }
 
 export interface AgentRequest {
@@ -468,6 +470,8 @@ export interface AgentUsage {
 export interface AgentResponse {
   requestId: string;
   answer?: string;
+  /** Model-suggested next questions; absent when none were generated. */
+  followUps?: string[];
   attachments: Attachment[];
   toolCalls: ToolCallTrace[];
   narration: NarrationEntry[];

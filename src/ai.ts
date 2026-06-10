@@ -148,5 +148,6 @@ function agentOptionsToWire(opts: AgentOptions): Record<string, unknown> {
   if (opts.maxAttachments !== undefined) wire.max_attachments = opts.maxAttachments;
   if (opts.runSqlRowCap !== undefined) wire.run_sql_row_cap = opts.runSqlRowCap;
   if (opts.maxTotalInputTokens !== undefined) wire.max_total_input_tokens = opts.maxTotalInputTokens;
+  if (opts.suggestFollowUps !== undefined) wire.suggest_follow_ups = opts.suggestFollowUps;
   return wire;
 }

@@ -952,6 +952,53 @@ describe("DatalatheClient", () => {
     expect((sr.partition as Record<string, unknown>).partition_by).toBe("region");
   });
 
+  it("agent parses follow_ups and sends suggest_follow_ups on wire", async () => {
+    const { fetch, calls } = createMockFetch([
+      {
+        status: 200,
+        body: {
+          request_id: "req1",
+          answer: "Done.",
+          follow_ups: ["Which branches drove it?", "How do rates compare?"],
+          attachments: [],
+          tool_calls: [],
+          narration: [],
+        },
+      },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    const result = await client.ai.agent({
+      contextId: "ctx1",
+      userQuestion: "Q",
+      agentOptions: { suggestFollowUps: false },
+    });
+
+    expect(result.followUps).toEqual(["Which branches drove it?", "How do rates compare?"]);
+    const opts = (calls[0].body as Record<string, unknown>).agent_options as Record<string, unknown>;
+    expect(opts.suggest_follow_ups).toBe(false);
+  });
+
+  it("agent leaves followUps undefined when the server omits it", async () => {
+    const { fetch, calls } = createMockFetch([
+      {
+        status: 200,
+        body: { request_id: "req1", answer: "Done.", attachments: [], tool_calls: [], narration: [] },
+      },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    const result = await client.ai.agent({
+      contextId: "ctx1",
+      userQuestion: "Q",
+      agentOptions: { maxIterations: 2 },
+    });
+
+    expect(result.followUps).toBeUndefined();
+    const opts = (calls[0].body as Record<string, unknown>).agent_options as Record<string, unknown>;
+    expect(opts.suggest_follow_ups).toBeUndefined();
+  });
+
   it("agent omits agent_options when not provided", async () => {
     const { fetch, calls } = createMockFetch([
       {

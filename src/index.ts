@@ -5,6 +5,7 @@ export { ConnectionsApi } from "./connections.js";
 export { AiApi, AiConversation } from "./ai.js";
 export { ProfilerApi } from "./profiler.js";
 export { DatalatheResultSet } from "./results/result-set.js";
+export { DatalatheStreamingResultSet } from "./results/streaming-result-set.js";
 export {
   DatalatheError,
   DatalatheApiError,

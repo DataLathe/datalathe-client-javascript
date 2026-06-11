@@ -204,4 +204,45 @@ export class HttpClient {
       clearTimeout(timeoutId);
     }
   }
+
+  /**
+   * POSTs a pre-built body and returns the raw response body stream for
+   * incremental consumption. Pre-stream failures (status >= 400) are mapped
+   * through the same error path as the buffered helpers before any bytes are
+   * read. The timeout bounds time-to-headers only; the body is unbounded by
+   * design (the caller owns draining it).
+   */
+  async postStream(path: string, body: unknown): Promise<ReadableStream<Uint8Array>> {
+    const url = this.baseUrl + path;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+
+    try {
+      const response = await this.fetchFn(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...this.defaultHeaders,
+        },
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        const responseBody = await response.text();
+        throwForFailure("POST", path, response.status, responseBody);
+      }
+
+      if (!response.body) {
+        throw new DatalatheApiError(
+          `POST ${path} returned ${response.status} with no response body`,
+          response.status,
+        );
+      }
+
+      return response.body;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
 }

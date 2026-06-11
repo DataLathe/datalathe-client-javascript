@@ -5,9 +5,17 @@ import type {
   S3StorageConfig,
   StageDataResponse,
   ChipsResponse,
+  ChipListOptions,
+  AsyncIngestSubmission,
+  IngestJob,
+  IngestJobStatus,
 } from "./types.js";
 import { SourceType } from "./types.js";
-import { DatalatheStageError } from "./errors.js";
+import {
+  DatalatheStageError,
+  DatalatheIngestJobError,
+  DatalatheIngestTimeoutError,
+} from "./errors.js";
 
 function partitionToWire(p?: Partition) {
   if (!p) return undefined;
@@ -204,8 +212,83 @@ export class ChipsApi {
     return responses;
   }
 
-  async list(): Promise<ChipsResponse> {
-    return this.http.get<ChipsResponse>("/lathe/chips");
+  /**
+   * Submits a chip-creation request for background processing (v1.7.12+
+   * engines). Returns immediately with the job and chip IDs; poll with
+   * getIngestJob or block with waitForIngest.
+   */
+  async createAsync(
+    source: SourceRequest,
+    chipId?: string,
+    sourceType: SourceType = SourceType.MYSQL,
+    chipName?: string,
+    storageConfig?: S3StorageConfig,
+    tags?: Record<string, string>,
+  ): Promise<AsyncIngestSubmission> {
+    const wireBody = {
+      source_type: sourceType,
+      source_request: sourceToWire(source),
+      async: true,
+      ...(chipId !== undefined ? { chip_id: chipId } : {}),
+      ...(chipName !== undefined ? { chip_name: chipName } : {}),
+      ...(storageConfig !== undefined ? { storage_config: storageConfigToWire(storageConfig) } : {}),
+      ...(tags !== undefined ? { tags } : {}),
+    };
+    return this.http.postRaw<AsyncIngestSubmission>("/lathe/stage/data", wireBody);
+  }
+
+  async getIngestJob(jobId: string): Promise<IngestJob> {
+    return this.http.get<IngestJob>(`/lathe/jobs/${encodeURIComponent(jobId)}`);
+  }
+
+  async listIngestJobs(
+    options: { status?: IngestJobStatus } = {},
+  ): Promise<IngestJob[]> {
+    const params = new URLSearchParams();
+    if (options.status !== undefined) params.set("status", options.status);
+    const query = params.toString();
+    return this.http.get<IngestJob[]>(`/lathe/jobs${query ? `?${query}` : ""}`);
+  }
+
+  async resumeIngestJob(jobId: string): Promise<AsyncIngestSubmission> {
+    return this.http.postRaw<AsyncIngestSubmission>(
+      `/lathe/jobs/${encodeURIComponent(jobId)}/resume`,
+      {},
+    );
+  }
+
+  /**
+   * Polls an ingest job until it reaches a terminal state. Resolves with the
+   * job record on success; throws DatalatheIngestJobError on failed/cancelled
+   * and DatalatheIngestTimeoutError when timeoutMs elapses first.
+   */
+  async waitForIngest(
+    jobId: string,
+    options: { pollIntervalMs?: number; timeoutMs?: number } = {},
+  ): Promise<IngestJob> {
+    const pollIntervalMs = options.pollIntervalMs ?? 2000;
+    const timeoutMs = options.timeoutMs ?? 600000;
+    const deadline = Date.now() + timeoutMs;
+
+    while (true) {
+      const job = await this.getIngestJob(jobId);
+      if (job.status === "succeeded") return job;
+      if (job.status === "failed" || job.status === "cancelled") {
+        throw new DatalatheIngestJobError(job);
+      }
+      if (Date.now() >= deadline) {
+        throw new DatalatheIngestTimeoutError(jobId, timeoutMs, job);
+      }
+      await new Promise((resolve) => setTimeout(resolve, pollIntervalMs));
+    }
+  }
+
+  async list(options: ChipListOptions = {}): Promise<ChipsResponse> {
+    const params = new URLSearchParams();
+    if (options.limit !== undefined) params.set("limit", String(options.limit));
+    if (options.offset !== undefined) params.set("offset", String(options.offset));
+    const query = params.toString();
+    return this.http.get<ChipsResponse>(`/lathe/chips${query ? `?${query}` : ""}`);
   }
 
   /**

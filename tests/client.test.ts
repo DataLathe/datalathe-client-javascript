@@ -7,6 +7,8 @@ import {
   DatalatheApiError,
   DatalatheStageError,
   DatalatheQueryError,
+  DatalatheIngestJobError,
+  DatalatheIngestTimeoutError,
 } from "../src/errors.js";
 import { createMockFetch } from "./helpers.js";
 
@@ -1044,5 +1046,314 @@ describe("DatalatheClient", () => {
       chipId: "lost",
       statusCode: 404,
     });
+  });
+
+  it("testListChipsWithPagination", async () => {
+    const chipsResponse = {
+      chips: [
+        {
+          chip_id: "chip1",
+          sub_chip_id: "sub1",
+          table_name: "users",
+          partition_value: "default",
+          created_at: 1700000000,
+        },
+      ],
+      metadata: [],
+      unreadable_chip_ids: ["bad-1"],
+      total_count: 137,
+    };
+
+    const { fetch, calls } = createMockFetch([
+      { status: 200, body: chipsResponse },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    const result = await client.chips.list({ limit: 25, offset: 50 });
+
+    expect(calls[0].url).toBe(
+      "http://localhost:8080/lathe/chips?limit=25&offset=50",
+    );
+    expect(result.totalCount).toBe(137);
+    expect(result.unreadableChipIds).toEqual(["bad-1"]);
+    expect(result.chips[0].chipId).toBe("chip1");
+  });
+
+  it("testListChipsWithLimitOnly", async () => {
+    const { fetch, calls } = createMockFetch([
+      { status: 200, body: { chips: [], metadata: [] } },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    const result = await client.chips.list({ limit: 10 });
+
+    expect(calls[0].url).toBe("http://localhost:8080/lathe/chips?limit=10");
+    expect(result.totalCount).toBeUndefined();
+  });
+
+  it("testCreateAsyncSubmitsJob", async () => {
+    const { fetch, calls } = createMockFetch([
+      { status: 202, body: { job_id: "job-1", chip_id: "chip-1" } },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    const submission = await client.chips.createAsync(
+      {
+        databaseName: "test_db",
+        query: "SELECT * FROM orders",
+        tableName: "orders",
+        streaming: true,
+        keysetColumn: "id",
+      },
+      undefined,
+      undefined,
+      "orders-chip",
+    );
+
+    expect(submission).toEqual({ jobId: "job-1", chipId: "chip-1" });
+    expect(calls[0].url).toBe("http://localhost:8080/lathe/stage/data");
+
+    const body = calls[0].body as Record<string, unknown>;
+    expect(body.async).toBe(true);
+    expect(body.source_type).toBe("MYSQL");
+    expect(body.chip_name).toBe("orders-chip");
+    const sr = body.source_request as Record<string, unknown>;
+    expect(sr.database_name).toBe("test_db");
+    expect(sr.streaming).toBe(true);
+    expect(sr.keyset_column).toBe("id");
+  });
+
+  it("testCreateAsyncSurfacesQueueFull", async () => {
+    const { fetch } = createMockFetch([
+      { status: 429, body: { error: "Ingest queue full" } },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+
+    await expect(
+      client.chips.createAsync({
+        databaseName: "db",
+        query: "SELECT 1",
+        tableName: "t",
+      }),
+    ).rejects.toMatchObject({
+      name: "DatalatheApiError",
+      statusCode: 429,
+    });
+  });
+
+  it("testGetIngestJob", async () => {
+    const { fetch, calls } = createMockFetch([
+      {
+        status: 200,
+        body: {
+          job_id: "job-1",
+          chip_id: "chip-1",
+          status: "running",
+          rows_ingested: 5000,
+          chunks_done: 2,
+          chunks_total: 8,
+          error: null,
+          created_at: 1700000000,
+          updated_at: 1700000100,
+        },
+      },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    const job = await client.chips.getIngestJob("job-1");
+
+    expect(calls[0].url).toBe("http://localhost:8080/lathe/jobs/job-1");
+    expect(calls[0].init.method).toBe("GET");
+    expect(job.jobId).toBe("job-1");
+    expect(job.chipId).toBe("chip-1");
+    expect(job.status).toBe("running");
+    expect(job.rowsIngested).toBe(5000);
+    expect(job.chunksDone).toBe(2);
+    expect(job.chunksTotal).toBe(8);
+    expect(job.error).toBeNull();
+    expect(job.createdAt).toBe(1700000000);
+    expect(job.updatedAt).toBe(1700000100);
+  });
+
+  it("testListIngestJobsWithStatusFilter", async () => {
+    const { fetch, calls } = createMockFetch([
+      {
+        status: 200,
+        body: [
+          { job_id: "job-1", chip_id: "chip-1", status: "running" },
+          { job_id: "job-2", chip_id: "chip-2", status: "running" },
+        ],
+      },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    const jobs = await client.chips.listIngestJobs({ status: "running" });
+
+    expect(calls[0].url).toBe("http://localhost:8080/lathe/jobs?status=running");
+    expect(jobs).toHaveLength(2);
+    expect(jobs[0].jobId).toBe("job-1");
+    expect(jobs[1].status).toBe("running");
+  });
+
+  it("testListIngestJobsWithoutFilter", async () => {
+    const { fetch, calls } = createMockFetch([
+      { status: 200, body: [] },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    const jobs = await client.chips.listIngestJobs();
+
+    expect(calls[0].url).toBe("http://localhost:8080/lathe/jobs");
+    expect(jobs).toEqual([]);
+  });
+
+  it("testResumeIngestJob", async () => {
+    const { fetch, calls } = createMockFetch([
+      { status: 202, body: { job_id: "job-1", chip_id: "chip-1" } },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    const submission = await client.chips.resumeIngestJob("job-1");
+
+    expect(calls[0].url).toBe("http://localhost:8080/lathe/jobs/job-1/resume");
+    expect(calls[0].init.method).toBe("POST");
+    expect(submission).toEqual({ jobId: "job-1", chipId: "chip-1" });
+  });
+
+  it("waitForIngest polls until succeeded", async () => {
+    const { fetch, calls } = createMockFetch([
+      { status: 200, body: { job_id: "job-1", chip_id: "chip-1", status: "queued" } },
+      { status: 200, body: { job_id: "job-1", chip_id: "chip-1", status: "running" } },
+      {
+        status: 200,
+        body: {
+          job_id: "job-1",
+          chip_id: "chip-1",
+          status: "succeeded",
+          rows_ingested: 9999,
+        },
+      },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    const job = await client.chips.waitForIngest("job-1", { pollIntervalMs: 1 });
+
+    expect(calls).toHaveLength(3);
+    expect(calls[0].url).toBe("http://localhost:8080/lathe/jobs/job-1");
+    expect(job.status).toBe("succeeded");
+    expect(job.rowsIngested).toBe(9999);
+  });
+
+  it("waitForIngest throws DatalatheIngestJobError on failed job", async () => {
+    const { fetch } = createMockFetch([
+      { status: 200, body: { job_id: "job-1", chip_id: "chip-1", status: "running" } },
+      {
+        status: 200,
+        body: {
+          job_id: "job-1",
+          chip_id: "chip-1",
+          status: "failed",
+          error: "Lost connection during query",
+        },
+      },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+
+    let caught: unknown;
+    try {
+      await client.chips.waitForIngest("job-1", { pollIntervalMs: 1 });
+    } catch (e) {
+      caught = e;
+    }
+
+    expect(caught).toBeInstanceOf(DatalatheIngestJobError);
+    const err = caught as DatalatheIngestJobError;
+    expect(err.job.error).toBe("Lost connection during query");
+    expect(err.message).toContain("Lost connection during query");
+    expect(err.job.status).toBe("failed");
+  });
+
+  it("waitForIngest throws DatalatheIngestJobError on cancelled job", async () => {
+    const { fetch } = createMockFetch([
+      { status: 200, body: { job_id: "job-1", chip_id: "chip-1", status: "cancelled" } },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+
+    await expect(
+      client.chips.waitForIngest("job-1", { pollIntervalMs: 1 }),
+    ).rejects.toBeInstanceOf(DatalatheIngestJobError);
+  });
+
+  it("waitForIngest throws DatalatheIngestTimeoutError when deadline passes", async () => {
+    const { fetch } = createMockFetch([
+      { status: 200, body: { job_id: "job-1", chip_id: "chip-1", status: "running" } },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+
+    let caught: unknown;
+    try {
+      await client.chips.waitForIngest("job-1", {
+        pollIntervalMs: 1,
+        timeoutMs: 0,
+      });
+    } catch (e) {
+      caught = e;
+    }
+
+    expect(caught).toBeInstanceOf(DatalatheIngestTimeoutError);
+    const err = caught as DatalatheIngestTimeoutError;
+    expect(err.jobId).toBe("job-1");
+    expect(err.lastJob.status).toBe("running");
+  });
+
+  it("aiQuery parses truncated result data", async () => {
+    const { fetch } = createMockFetch([
+      {
+        status: 200,
+        body: {
+          request_id: "req1",
+          data: {
+            columns: [{ name: "region", data_type: "Utf8" }],
+            rows: [["LATAM"]],
+            truncated: true,
+          },
+        },
+      },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    const result = await client.ai.query({
+      contextId: "ctx1",
+      userQuestion: "Q",
+    });
+
+    expect(result.data?.truncated).toBe(true);
+  });
+
+  it("aiQuery leaves truncated undefined when the server omits it", async () => {
+    const { fetch } = createMockFetch([
+      {
+        status: 200,
+        body: {
+          request_id: "req1",
+          data: {
+            columns: [{ name: "region", data_type: "Utf8" }],
+            rows: [["LATAM"]],
+          },
+        },
+      },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    const result = await client.ai.query({
+      contextId: "ctx1",
+      userQuestion: "Q",
+    });
+
+    expect(result.data?.truncated).toBeUndefined();
   });
 });

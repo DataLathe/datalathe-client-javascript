@@ -135,6 +135,16 @@ export interface ChipsResponse {
    * older engines.
    */
   unreadableChipIds?: string[];
+  /**
+   * Total chip count before limit/offset pagination is applied.
+   * Present on v1.7.12+ engines; absent on older engines.
+   */
+  totalCount?: number;
+}
+
+export interface ChipListOptions {
+  limit?: number;
+  offset?: number;
 }
 
 export interface ConnectionInfo {
@@ -292,6 +302,33 @@ export interface Job {
   message: string;
 }
 
+// Async ingest job types (v1.7.12+ engines)
+
+export type IngestJobStatus =
+  | "queued"
+  | "running"
+  | "succeeded"
+  | "failed"
+  | "cancelled";
+
+/** 202 response from an async stage-data submit or job resume. */
+export interface AsyncIngestSubmission {
+  jobId: string;
+  chipId: string;
+}
+
+export interface IngestJob {
+  jobId: string;
+  status: IngestJobStatus;
+  chipId?: string | null;
+  rowsIngested?: number | null;
+  chunksDone?: number | null;
+  chunksTotal?: number | null;
+  error?: string | null;
+  createdAt?: number | null;
+  updatedAt?: number | null;
+}
+
 // Schema mapping types
 
 export interface SchemaMapping {
@@ -364,6 +401,8 @@ export interface AiColumnInfo {
 export interface AiQueryResultData {
   columns: AiColumnInfo[];
   rows: (string | null)[][];
+  /** True when rows were capped by the engine. Absent on pre-1.7.12 engines. */
+  truncated?: boolean;
 }
 
 export interface AiVisualizationConfig {

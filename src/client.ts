@@ -4,6 +4,7 @@ import { QueriesApi, type GenerateReportResult } from "./queries.js";
 import { ConnectionsApi } from "./connections.js";
 import { AiApi } from "./ai.js";
 import { ProfilerApi } from "./profiler.js";
+import type { DatalatheStreamingResultSet } from "./results/streaming-result-set.js";
 import type {
   SourceRequest,
   Partition,
@@ -185,6 +186,17 @@ export class DatalatheClient {
     returnTransformedQuery?: boolean,
   ): Promise<GenerateReportResult> {
     return this.queries.generateReport(chipIds, queries, sourceType, transformQuery, returnTransformedQuery);
+  }
+
+  /** @deprecated Use client.queries.streamReport() */
+  async streamReport(
+    chipIds: string[],
+    query: string | string[],
+    sourceType: SourceType = SourceType.LOCAL,
+    transformQuery?: boolean,
+    returnTransformedQuery?: boolean,
+  ): Promise<DatalatheStreamingResultSet> {
+    return this.queries.streamReport(chipIds, query, sourceType, transformQuery, returnTransformedQuery);
   }
 
   /** @deprecated Use client.queries.extractTables() */

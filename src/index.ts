@@ -11,6 +11,8 @@ export {
   DatalatheStageError,
   ChipNotFoundError,
   DatalatheQueryError,
+  DatalatheIngestJobError,
+  DatalatheIngestTimeoutError,
 } from "./errors.js";
 export { snakeToCamelKeys } from "./transform.js";
 export {
@@ -34,6 +36,10 @@ export {
   type ChipMetadata,
   type ChipTag,
   type ChipsResponse,
+  type ChipListOptions,
+  type IngestJobStatus,
+  type AsyncIngestSubmission,
+  type IngestJob,
   type ProfilerTable,
   type ModelerConfig,
   type TyperConfig,

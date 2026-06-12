@@ -6,6 +6,7 @@ import type {
 } from "./types.js";
 import { SourceType, ReportType } from "./types.js";
 import { DatalatheApiError, DatalatheQueryError } from "./errors.js";
+import { DatalatheStreamingResultSet } from "./results/streaming-result-set.js";
 
 export interface GenerateReportResult {
   results: Map<number, ReportResultEntry>;
@@ -56,6 +57,47 @@ export class QueriesApi {
     }
 
     return { results, timing: response.timing ?? null };
+  }
+
+  /**
+   * Executes a single query against chip IDs and streams the result
+   * incrementally over NDJSON, returning a {@link DatalatheStreamingResultSet}.
+   *
+   * Unlike {@link generateReport}, this path is single-query only (the engine
+   * rejects multi-query streams with 400) and is not subject to the server's
+   * `max_result_rows` cap — it is the sanctioned escape hatch for large
+   * results. Client memory is the caller's responsibility: consume the result
+   * incrementally rather than collecting it all.
+   *
+   * @throws DatalatheApiError if more than one query is supplied.
+   */
+  async streamReport(
+    chipIds: string[],
+    query: string | string[],
+    sourceType: SourceType = SourceType.LOCAL,
+    transformQuery?: boolean,
+    returnTransformedQuery?: boolean,
+  ): Promise<DatalatheStreamingResultSet> {
+    const queries = Array.isArray(query) ? query : [query];
+    if (queries.length !== 1) {
+      throw new DatalatheApiError(
+        `streamReport supports exactly one query; received ${queries.length}. Use generateReport for multi-query batches.`,
+        400,
+      );
+    }
+
+    const wireBody = {
+      chip_id: chipIds,
+      source_type: sourceType,
+      type: ReportType.GENERIC,
+      query_request: { query: queries },
+      stream: true,
+      ...(transformQuery !== undefined ? { transform_query: transformQuery } : {}),
+      ...(returnTransformedQuery !== undefined ? { return_transformed_query: returnTransformedQuery } : {}),
+    };
+
+    const body = await this.http.postStream("/lathe/report", wireBody);
+    return new DatalatheStreamingResultSet(body);
   }
 
   async extractTables(query: string): Promise<string[]> {

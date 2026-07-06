@@ -29,6 +29,7 @@ import type {
   DatalatheConfig,
   ProfilerTable,
   SchemaMapping,
+  EngineVersion,
 } from "./types.js";
 import { SourceType } from "./types.js";
 
@@ -47,6 +48,11 @@ export class DatalatheClient {
     this.connections = new ConnectionsApi(this.http);
     this.ai = new AiApi(this.http);
     this.profiler = new ProfilerApi(this.http);
+  }
+
+  /** Engine version, e.g. { version: "1.9.0" }. */
+  async getVersion(): Promise<EngineVersion> {
+    return this.http.get<EngineVersion>("/lathe/version");
   }
 
   // --- Database inspection ---

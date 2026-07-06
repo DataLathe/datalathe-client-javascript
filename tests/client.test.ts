@@ -1356,4 +1356,31 @@ describe("DatalatheClient", () => {
 
     expect(result.data?.truncated).toBeUndefined();
   });
+
+  it("reattach posts to the connection attach endpoint", async () => {
+    const { fetch, calls } = createMockFetch([
+      { status: 200, body: { alias: "prod db", status: "attached" } },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    const result = await client.connections.reattach("prod db");
+
+    expect(result.status).toBe("attached");
+    expect(calls[0].url).toBe(
+      "http://localhost:8080/lathe/connections/prod%20db/attach",
+    );
+    expect(calls[0].init?.method).toBe("POST");
+  });
+
+  it("getVersion reads the engine version", async () => {
+    const { fetch, calls } = createMockFetch([
+      { status: 200, body: { version: "1.9.1" } },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    const result = await client.getVersion();
+
+    expect(result.version).toBe("1.9.1");
+    expect(calls[0].url).toBe("http://localhost:8080/lathe/version");
+  });
 });

@@ -153,6 +153,12 @@ export interface ConnectionInfo {
   port: string;
   database: string;
   user: string;
+  /** Whether the engine currently has this connection attached (engine >= 1.9.1; absent on older engines). */
+  attached?: boolean;
+}
+
+export interface EngineVersion {
+  version: string;
 }
 
 export interface ConnectionRequest {

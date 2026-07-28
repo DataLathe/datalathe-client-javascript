@@ -335,6 +335,21 @@ export interface IngestJob {
   updatedAt?: number | null;
 }
 
+// Raw chip query types
+
+export interface ChipQueryColumn {
+  name: string;
+  dataType: string;
+}
+
+/** Result of a raw chip query (`POST /lathe/chips/query`). */
+export interface ChipQueryResult {
+  columns: ChipQueryColumn[];
+  rows: (string | null)[][];
+  /** Rows were cut off at the engine's configured max_result_rows cap. */
+  truncated: boolean;
+}
+
 // Schema mapping types
 
 export interface SchemaMapping {

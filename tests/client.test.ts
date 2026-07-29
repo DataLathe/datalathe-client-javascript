@@ -1383,4 +1383,50 @@ describe("DatalatheClient", () => {
     expect(result.version).toBe("1.9.1");
     expect(calls[0].url).toBe("http://localhost:8080/lathe/version");
   });
+
+  it("chips.query posts wire body and camelizes the result", async () => {
+    const { fetch, calls } = createMockFetch([
+      {
+        status: 200,
+        body: {
+          columns: [{ name: "n", data_type: "BigInt" }],
+          rows: [["3"]],
+          truncated: false,
+        },
+      },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    const result = await client.chips.query(
+      ["chip-1"],
+      "SELECT COUNT(*) AS n FROM s_chip_1.main.loans",
+    );
+
+    expect(calls[0].url).toBe("http://localhost:8080/lathe/chips/query");
+    const body = calls[0].body as Record<string, unknown>;
+    expect(body.chip_ids).toEqual(["chip-1"]);
+    expect(body.query).toBe("SELECT COUNT(*) AS n FROM s_chip_1.main.loans");
+
+    expect(result.columns).toEqual([{ name: "n", dataType: "BigInt" }]);
+    expect(result.rows).toEqual([["3"]]);
+    expect(result.truncated).toBe(false);
+  });
+
+  it("chips.query surfaces the typed chip-not-found error", async () => {
+    const { fetch } = createMockFetch([
+      {
+        status: 404,
+        body: {
+          error: "Chip 'ghost' is not available (may have expired)",
+          error_code: "chip_not_found",
+          chip_id: "ghost",
+        },
+      },
+    ]);
+
+    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    await expect(client.chips.query(["ghost"], "select 1")).rejects.toThrow(
+      ChipNotFoundError,
+    );
+  });
 });

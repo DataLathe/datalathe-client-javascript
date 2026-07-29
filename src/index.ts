@@ -41,6 +41,8 @@ export {
   type IngestJobStatus,
   type AsyncIngestSubmission,
   type IngestJob,
+  type ChipQueryColumn,
+  type ChipQueryResult,
   type ProfilerTable,
   type ModelerConfig,
   type TyperConfig,

@@ -7,6 +7,7 @@ import type {
   ChipsResponse,
   ChipListOptions,
   AsyncIngestSubmission,
+  ChipQueryResult,
   IngestJob,
   IngestJobStatus,
 } from "./types.js";
@@ -313,6 +314,20 @@ export class ChipsApi {
     const query = params.toString();
     const path = `/lathe/chips/search${query ? `?${query}` : ""}`;
     return this.http.get<ChipsResponse>(path);
+  }
+
+  /**
+   * Runs a single read-only SQL statement against the chips' raw catalogs
+   * (engine 1.11+). Unlike report queries there is no view layer: the
+   * statement sees every table inside the attached chips via
+   * `s_<sub_chip_id>.main.<table>`, including staging leftovers. Results are
+   * truncated at the engine's max_result_rows cap (`truncated` flag).
+   */
+  async query(chipIds: string[], query: string): Promise<ChipQueryResult> {
+    return this.http.postRaw<ChipQueryResult>("/lathe/chips/query", {
+      chip_ids: chipIds,
+      query,
+    });
   }
 
   async addTags(

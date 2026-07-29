@@ -40,6 +40,17 @@ describe("chip lifecycle (integration)", () => {
     expect(String(cell)).toBe("5");
   });
 
+  it("runs raw SQL against the chip catalog", async () => {
+    const catalog = chipId.replace(/-/g, "_");
+    const result = await client.chips.query(
+      [chipId],
+      `SELECT COUNT(*) AS n FROM ${catalog}.main.${tableName}`,
+    );
+    expect(result.columns[0]?.name).toBe("n");
+    expect(result.rows[0]?.[0]).toBe("5");
+    expect(result.truncated).toBe(false);
+  });
+
   it("rejects re-stage with TABLE_ALREADY_EXISTS (409)", async () => {
     await expect(
       client.chips.createMultiple(

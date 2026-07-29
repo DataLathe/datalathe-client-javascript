@@ -33,12 +33,13 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
-          node-version: "20"
+          node-version: "24"
           registry-url: "https://registry.npmjs.org"
           cache: npm
 
       # npm trusted publishing (auto-detect OIDC) requires npm 11.5.1+;
-      # setup-node@v4 ships an older npm.
+      # setup-node ships an older npm, and npm@latest (12+) requires
+      # Node 22.22+/24.15+ — keep node-version above in step with it.
       - name: Upgrade npm
         run: npm install -g npm@latest
 

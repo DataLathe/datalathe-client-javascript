@@ -204,7 +204,7 @@ describe("streamReport", () => {
 
   it("maps a pre-stream HTTP failure to the existing error path", async () => {
     const { fetch } = jsonFetch(429, { error: "too many", error_code: "saturated" });
-    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    const client = new DatalatheClient("http://localhost:8080", { fetch, retryOn429: false });
 
     await expect(
       client.queries.streamReport(["c"], "SELECT 1"),

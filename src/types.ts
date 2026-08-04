@@ -187,6 +187,10 @@ export interface DatalatheClientOptions {
   headers?: Record<string, string>;
   /** Request timeout in milliseconds (default: 30000) */
   timeout?: number;
+  /** Retry requests rejected with HTTP 429, honoring Retry-After (default: true) */
+  retryOn429?: boolean;
+  /** Maximum number of 429 retries after the initial attempt (default: 3) */
+  maxRetries?: number;
 }
 
 // Profiler types

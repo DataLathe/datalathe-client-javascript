@@ -1128,7 +1128,10 @@ describe("DatalatheClient", () => {
       { status: 429, body: { error: "Ingest queue full" } },
     ]);
 
-    const client = new DatalatheClient("http://localhost:8080", { fetch });
+    const client = new DatalatheClient("http://localhost:8080", {
+      fetch,
+      retryOn429: false,
+    });
 
     await expect(
       client.chips.createAsync({

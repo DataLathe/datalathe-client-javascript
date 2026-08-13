@@ -44,6 +44,6 @@
     "client"
   ],
   "dependencies": {
-    "@streamparser/json": "^0.0.22"
+    "@streamparser/json": "^0.0.23"
   }
 }

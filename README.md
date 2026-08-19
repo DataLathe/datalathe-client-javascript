@@ -32,6 +32,10 @@ console.log(results.get(0)?.result);
 - `options.fetch` — Custom fetch implementation
 - `options.headers` — Default headers for all requests
 - `options.timeout` — Request timeout in ms (default: 30000). Chip creation can take minutes for large datasets; raise this (e.g. `600000`) when creating chips synchronously.
+- `options.retryOn429` — Retry requests rejected with HTTP 429 (default: `true`)
+- `options.maxRetries` — Maximum number of 429 retries after the initial attempt (default: `3`)
+
+When the engine sheds load it returns HTTP 429 with a `Retry-After` header, having done no work on the request, so the client transparently retries 429 responses for every method (up to 3 attempts by default, honoring `Retry-After`, with exponential backoff when the header is absent). Network errors are never retried. If retries are exhausted, the final 429 surfaces as a normal `DatalatheApiError`.
 
 The API is grouped into namespaces on the client instance: `client.chips`, `client.queries`, `client.connections`, `client.ai`, and `client.profiler`, plus a few top-level methods.
 
@@ -39,7 +43,7 @@ The API is grouped into namespaces on the client instance: `client.chips`, `clie
 
 | Method | Description |
 |---|---|
-| `getVersion()` | Engine version, e.g. `{ version: "1.9.0" }` |
+| `getVersion()` | Engine version, e.g. `{ version: "1.15.0" }` |
 | `getDatabases()` | Lists databases attached to the engine |
 | `getDatabaseSchema(databaseName)` | Table and column metadata for a database |
 | `getLicense()` / `putLicense(licenseKey)` | Read / install the engine license |

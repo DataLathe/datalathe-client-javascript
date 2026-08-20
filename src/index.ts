@@ -4,6 +4,13 @@ export { QueriesApi, type GenerateReportResult } from "./queries.js";
 export { ConnectionsApi } from "./connections.js";
 export { AiApi, AiConversation } from "./ai.js";
 export { ProfilerApi } from "./profiler.js";
+export {
+  ChipResolver,
+  ResolvedChips,
+  type ChipFactory,
+  type ChipResolverOptions,
+  type ChipSourceRequest,
+} from "./resolver.js";
 export { DatalatheResultSet } from "./results/result-set.js";
 export { DatalatheStreamingResultSet } from "./results/streaming-result-set.js";
 export {

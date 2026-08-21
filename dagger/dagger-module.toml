@@ -1,0 +1,11 @@
+name = "datalathe-client-js"
+engineVersion = "v1.0.0-beta.9+1c6e07b1"
+disableDefaultFunctionCaching = true
+
+[runtime]
+  source = "typescript"
+
+[[dependencies]]
+  name = "datalathe"
+  source = "github.com/DataLathe/datalathe-backend/dagger@dagger-sdk-integration-checks"
+  pin = "1185fd71aec2b07a2f1329cf0d826c8f925fd335"

@@ -7,5 +7,5 @@ disableDefaultFunctionCaching = true
 
 [[dependencies]]
   name = "datalathe"
-  source = "github.com/DataLathe/datalathe-backend/dagger@dagger-sdk-integration-checks"
-  pin = "1185fd71aec2b07a2f1329cf0d826c8f925fd335"
+  source = "github.com/DataLathe/datalathe-backend/dagger@main"
+  pin = "d94b5053b738c72edc7bd63f3417fdf832e504f5"

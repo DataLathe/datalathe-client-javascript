@@ -15,73 +15,73 @@ import type {
 
 
 export type DatalatheBuildAndTestOpts = {
-  source?: Directory // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L73)
+  source?: Directory // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L73)
 }
 
 export type DatalatheConcurrentReportTestOpts = {
-  concurrency: number // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L532)
+  concurrency: number // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L532)
 }
 
 export type DatalatheIntegrationJavaOpts = {
-  source?: Directory // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L612)
-  javaClient: Directory // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L616)
+  source?: Directory // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L612)
+  javaClient: Directory // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L616)
 }
 
 export type DatalatheIntegrationJsOpts = {
-  source?: Directory // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L553)
-  jsClient: Directory // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L557)
+  source?: Directory // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L553)
+  jsClient: Directory // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L557)
 }
 
 export type DatalatheIntegrationPythonOpts = {
-  source?: Directory // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L582)
-  pythonClient: Directory // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L586)
+  source?: Directory // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L582)
+  pythonClient: Directory // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L586)
 }
 
 export type DatalatheLoadTestOpts = {
-  concurrency: number // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L511)
+  concurrency: number // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L511)
 }
 
 export type DatalatheMysqlStreamingMemoryPressureOpts = {
-  cacheBust?: string // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L786)
+  cacheBust?: string // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L786)
 }
 
 export type DatalathePerfGateOpts = {
-  rows: number // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L814)
-  cacheBust?: string // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L817)
+  rows: number // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L814)
+  cacheBust?: string // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L817)
 }
 
 export type DatalathePublishOpts = {
-  sessionToken?: Secret // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L116)
-  endpointUrl?: string // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L117)
-  version?: string // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L118)
-  skipLatest?: boolean // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L119)
+  sessionToken?: Secret // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L116)
+  endpointUrl?: string // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L117)
+  version?: string // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L118)
+  skipLatest?: boolean // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L119)
 }
 
 export type DatalathePushToEcrDirectOpts = {
-  version?: string // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L1604)
-  skipLatest?: boolean // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L1604)
+  version?: string // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L1604)
+  skipLatest?: boolean // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L1604)
 }
 
 export type DatalatheReleaseOpts = {
-  sessionToken?: Secret // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L1753)
-  endpointUrl?: string // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L1754)
-  presignAccessKeyId?: Secret // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L1755)
-  presignSecretAccessKey?: Secret // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L1756)
+  sessionToken?: Secret // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L1753)
+  endpointUrl?: string // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L1754)
+  presignAccessKeyId?: Secret // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L1755)
+  presignSecretAccessKey?: Secret // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L1756)
 }
 
 export type DatalatheReportPerfGateOpts = {
-  iterations: number // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L886)
-  concurrency: number // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L887)
-  cacheBust?: string // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L890)
+  iterations: number // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L886)
+  concurrency: number // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L887)
+  cacheBust?: string // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L890)
 }
 
 export type DatalatheScaleSoakOpts = {
-  profile: string // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L1119)
-  reportRequestScoping: boolean // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L1120)
+  profile: string // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L1119)
+  reportRequestScoping: boolean // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L1120)
 }
 
 
-export class Datalathe extends BaseClient { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L62)
+export class Datalathe extends BaseClient { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L62)
   private readonly _id?: ID = undefined
   private readonly _buildAndTest?: Void = undefined
   private readonly _check?: string = undefined
@@ -195,7 +195,7 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
   /**
    * Build the application container
    */
-  build = (source: Directory): Container => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L1462)
+  build = (source: Directory): Container => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L1462)
 
     const ctx = this._ctx.select(
       "build",
@@ -211,8 +211,8 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
    * arguments are not inherited by module runtime calls.
    */
   buildAndTest = async (
-    opts?: DatalatheBuildAndTestOpts // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L71) 
-    ): Promise<void> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L71)
+    opts?: DatalatheBuildAndTestOpts // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L71) 
+    ): Promise<void> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L71)
     if (this._buildAndTest) {
       return
     }
@@ -230,7 +230,7 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
   /**
    * Build macOS ARM binaries via cargo-zigbuild cross-compilation
    */
-  buildDarwin = (source: Directory): Container => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L1678)
+  buildDarwin = (source: Directory): Container => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L1678)
 
     const ctx = this._ctx.select(
       "buildDarwin",
@@ -242,7 +242,7 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
   /**
    * Create development environment container
    */
-  buildEnv = (source: Directory): Container => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L1651)
+  buildEnv = (source: Directory): Container => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L1651)
 
     const ctx = this._ctx.select(
       "buildEnv",
@@ -255,7 +255,7 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
    * Credential-free validation: runs the workspace test suite and proves
    * the runner image assembles from the build artifacts. No registry push.
    */
-  check = async (source: Directory): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L83)
+  check = async (source: Directory): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L83)
     if (this._check) {
       return this._check
     }
@@ -270,7 +270,7 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
     
     return response
   }
-  clippy = async (source: Directory): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L157)
+  clippy = async (source: Directory): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L157)
     if (this._clippy) {
       return this._clippy
     }
@@ -290,8 +290,8 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
    * N concurrent /lathe/report queries against one staged chip — regression guard for runtime-thread starvation under load.
    */
   concurrentReportTest = async (source: Directory, 
-    opts?: DatalatheConcurrentReportTestOpts // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L527) 
-    ): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L527)
+    opts?: DatalatheConcurrentReportTestOpts // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L527) 
+    ): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L527)
     if (this._concurrentReportTest) {
       return this._concurrentReportTest
     }
@@ -311,7 +311,7 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
    * Export the cross-compiled darwin-arm64 binaries for smoke-testing
    * on a macOS runner before release publication
    */
-  darwinBinaries = (source: Directory): Directory => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L147)
+  darwinBinaries = (source: Directory): Directory => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L147)
 
     const ctx = this._ctx.select(
       "darwinBinaries",
@@ -319,7 +319,7 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
     )
     return new Directory(ctx)
   }
-  e2E = async (source: Directory): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L167)
+  e2E = async (source: Directory): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L167)
     if (this._e2E) {
       return this._e2E
     }
@@ -338,7 +338,7 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
   /**
    * Partitioned-staging e2e from a FILE source — splits one CSV into sub-chips by a column.
    */
-  e2EFilePartition = async (source: Directory): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L187)
+  e2EFilePartition = async (source: Directory): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L187)
     if (this._e2EFilePartition) {
       return this._e2EFilePartition
     }
@@ -359,7 +359,7 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
    * sub-chip object AND its .meta.json sidecar land in the bucket, and the
    * sidecar's self-description matches the registered chip.
    */
-  e2EFilePartitionS3 = async (source: Directory): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L209)
+  e2EFilePartitionS3 = async (source: Directory): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L209)
     if (this._e2EFilePartitionS3) {
       return this._e2EFilePartitionS3
     }
@@ -378,7 +378,7 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
   /**
    * Chip lifecycle e2e from MYSQL source. Single-run only — the seeded MySQL fixture is shared mutable state.
    */
-  e2EMysql = async (source: Directory): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L635)
+  e2EMysql = async (source: Directory): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L635)
     if (this._e2EMysql) {
       return this._e2EMysql
     }
@@ -398,8 +398,8 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
    * Run Java client integration tests against ephemeral engine + chip-manager.
    */
   integrationJava = async (
-    opts?: DatalatheIntegrationJavaOpts // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L607) 
-    ): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L607)
+    opts?: DatalatheIntegrationJavaOpts // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L607) 
+    ): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L607)
     if (this._integrationJava) {
       return this._integrationJava
     }
@@ -419,8 +419,8 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
    * Run JS client integration tests against ephemeral engine + chip-manager.
    */
   integrationJs = async (
-    opts?: DatalatheIntegrationJsOpts // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L548) 
-    ): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L548)
+    opts?: DatalatheIntegrationJsOpts // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L548) 
+    ): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L548)
     if (this._integrationJs) {
       return this._integrationJs
     }
@@ -440,8 +440,8 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
    * Run Python client integration tests against ephemeral engine + chip-manager.
    */
   integrationPython = async (
-    opts?: DatalatheIntegrationPythonOpts // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L577) 
-    ): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L577)
+    opts?: DatalatheIntegrationPythonOpts // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L577) 
+    ): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L577)
     if (this._integrationPython) {
       return this._integrationPython
     }
@@ -457,8 +457,8 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
     return response
   }
   loadTest = async (source: Directory, 
-    opts?: DatalatheLoadTestOpts // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L506) 
-    ): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L506)
+    opts?: DatalatheLoadTestOpts // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L506) 
+    ): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L506)
     if (this._loadTest) {
       return this._loadTest
     }
@@ -477,7 +477,7 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
   /**
    * Disk-spill regression test: forces the query engine to spill via memory_limit_mb=256 against a 100M-row sort.
    */
-  memoryPressureTest = async (source: Directory): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L1290)
+  memoryPressureTest = async (source: Directory): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L1290)
     if (this._memoryPressureTest) {
       return this._memoryPressureTest
     }
@@ -498,7 +498,7 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
    * chip visibility, shared connection/license store, kill/resume of an async ingest,
    * and cross-engine delete. The un-pin gate for engine autoscaling.
    */
-  multiEngineVerify = async (source: Directory): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L930)
+  multiEngineVerify = async (source: Directory): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L930)
     if (this._multiEngineVerify) {
       return this._multiEngineVerify
     }
@@ -517,7 +517,7 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
   /**
    * Buffered MySQL ingest must survive a stale cached connection — primes the cache, KILLs engine sessions, re-ingests.
    */
-  mysqlStaleConnectionRetry = async (source: Directory): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L755)
+  mysqlStaleConnectionRetry = async (source: Directory): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L755)
     if (this._mysqlStaleConnectionRetry) {
       return this._mysqlStaleConnectionRetry
     }
@@ -536,7 +536,7 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
   /**
    * Streaming MySQL ingest happy-path against the existing MySQL service binding.
    */
-  mysqlStreamingBasic = async (source: Directory): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L659)
+  mysqlStreamingBasic = async (source: Directory): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L659)
     if (this._mysqlStreamingBasic) {
       return this._mysqlStreamingBasic
     }
@@ -555,7 +555,7 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
   /**
    * Mid-stream failure: KILL the MySQL query during a streaming load, verify chip stays clean.
    */
-  mysqlStreamingFailure = async (source: Directory): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L731)
+  mysqlStreamingFailure = async (source: Directory): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L731)
     if (this._mysqlStreamingFailure) {
       return this._mysqlStreamingFailure
     }
@@ -574,7 +574,7 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
   /**
    * Keyset-parallel streaming parity test — verify partition_column produces identical chip to serial.
    */
-  mysqlStreamingKeyset = async (source: Directory): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L683)
+  mysqlStreamingKeyset = async (source: Directory): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L683)
     if (this._mysqlStreamingKeyset) {
       return this._mysqlStreamingKeyset
     }
@@ -593,7 +593,7 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
   /**
    * Streaming ingest survives latin1 text columns — regression for the nCino loan_origination 500.
    */
-  mysqlStreamingLatinCharset = async (source: Directory): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L707)
+  mysqlStreamingLatinCharset = async (source: Directory): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L707)
     if (this._mysqlStreamingLatinCharset) {
       return this._mysqlStreamingLatinCharset
     }
@@ -613,8 +613,8 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
    * 50M-row streaming load under memory_limit_mb=256. The nCino regression test.
    */
   mysqlStreamingMemoryPressure = async (source: Directory, 
-    opts?: DatalatheMysqlStreamingMemoryPressureOpts // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L779) 
-    ): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L779)
+    opts?: DatalatheMysqlStreamingMemoryPressureOpts // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L779) 
+    ): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L779)
     if (this._mysqlStreamingMemoryPressure) {
       return this._mysqlStreamingMemoryPressure
     }
@@ -636,8 +636,8 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
    * Emits PERF| timing lines and GATE| verdicts; fails on any threshold breach.
    */
   perfGate = async (source: Directory, 
-    opts?: DatalathePerfGateOpts // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L809) 
-    ): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L809)
+    opts?: DatalathePerfGateOpts // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L809) 
+    ): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L809)
     if (this._perfGate) {
       return this._perfGate
     }
@@ -657,8 +657,8 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
    * Build, test, and push the runner image to ECR.
    */
   publish = async (source: Directory, awsAccount: string, awsRegion: string, awsRepo: string, secretAccessKey: Secret, accessKeyId: Secret, 
-    opts?: DatalathePublishOpts // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L106) 
-    ): Promise<string[]> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L106)
+    opts?: DatalathePublishOpts // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L106) 
+    ): Promise<string[]> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L106)
     const ctx = this._ctx.select(
       "publish",
       { source, awsAccount, awsRegion, awsRepo, secretAccessKey, accessKeyId, ...opts},
@@ -669,7 +669,7 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
     
     return response
   }
-  pushToEcr = async (container: Container, awsAccount: string, awsRegion: string, awsRepo: string, awsCredentials: File): Promise<string[]> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L1538)
+  pushToEcr = async (container: Container, awsAccount: string, awsRegion: string, awsRepo: string, awsCredentials: File): Promise<string[]> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L1538)
     const ctx = this._ctx.select(
       "pushToEcr",
       { container, awsAccount, awsRegion, awsRepo, awsCredentials},
@@ -681,8 +681,8 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
     return response
   }
   pushToEcrDirect = async (container: Container, args: DatalatheAwsArgs, 
-    opts?: DatalathePushToEcrDirectOpts // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L1604) 
-    ): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L1604)
+    opts?: DatalathePushToEcrDirectOpts // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L1604) 
+    ): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L1604)
     if (this._pushToEcrDirect) {
       return this._pushToEcrDirect
     }
@@ -706,7 +706,7 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
    * fresh attach, A is untouched, a re-register collides, a partial-family
    * manifest is rejected wholesale, and rename_to re-keys a single import.
    */
-  registerCrossEnv = async (source: Directory): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L384)
+  registerCrossEnv = async (source: Directory): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L384)
     if (this._registerCrossEnv) {
       return this._registerCrossEnv
     }
@@ -729,7 +729,7 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
    * again with correct metadata and reports working from both a fresh engine
    * and the one that staged them.
    */
-  reindexRebuild = async (source: Directory): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L291)
+  reindexRebuild = async (source: Directory): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L291)
     if (this._reindexRebuild) {
       return this._reindexRebuild
     }
@@ -749,8 +749,8 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
    * Build release binaries for Linux x86_64 and macOS ARM, upload to S3, and send SNS notification
    */
   release = async (source: Directory, awsAccount: string, awsRegion: string, awsRepo: string, secretAccessKey: Secret, accessKeyId: Secret, version: string, s3Bucket: string, snsTopicArn: string, 
-    opts?: DatalatheReleaseOpts // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L1740) 
-    ): Promise<string[]> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L1740)
+    opts?: DatalatheReleaseOpts // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L1740) 
+    ): Promise<string[]> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L1740)
     const ctx = this._ctx.select(
       "release",
       { source, awsAccount, awsRegion, awsRepo, secretAccessKey, accessKeyId, version, s3Bucket, snsTopicArn, ...opts},
@@ -775,8 +775,8 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
    * successes at `concurrency` width per leg.
    */
   reportPerfGate = async (source: Directory, 
-    opts?: DatalatheReportPerfGateOpts // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L881) 
-    ): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L881)
+    opts?: DatalatheReportPerfGateOpts // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L881) 
+    ): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L881)
     if (this._reportPerfGate) {
       return this._reportPerfGate
     }
@@ -791,7 +791,7 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
     
     return response
   }
-  run = (buildContainer: Container, source: Directory): Container => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L1508)
+  run = (buildContainer: Container, source: Directory): Container => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L1508)
 
     const ctx = this._ctx.select(
       "run",
@@ -822,8 +822,8 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
    * shared-pool rollback path.
    */
   scaleSoak = async (source: Directory, 
-    opts?: DatalatheScaleSoakOpts // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L1114) 
-    ): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L1114)
+    opts?: DatalatheScaleSoakOpts // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L1114) 
+    ): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L1114)
     if (this._scaleSoak) {
       return this._scaleSoak
     }
@@ -838,7 +838,7 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
     
     return response
   }
-  test = (source: Directory): Container => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L1491)
+  test = (source: Directory): Container => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L1491)
 
     const ctx = this._ctx.select(
       "test",
@@ -849,7 +849,7 @@ export class Datalathe extends BaseClient { // datalathe (https://github.com/Dat
 }
 
 
-export class DatalatheAwsArgs extends BaseClient { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L22)
+export class DatalatheAwsArgs extends BaseClient { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L22)
   private readonly _id?: ID = undefined
   private readonly _accessKeyId?: string = undefined
   private readonly _awsAccount?: string = undefined
@@ -902,7 +902,7 @@ export class DatalatheAwsArgs extends BaseClient { // datalathe (https://github.
     
     return response
   }
-  accessKeyId = async (): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L22)
+  accessKeyId = async (): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L22)
     if (this._accessKeyId) {
       return this._accessKeyId
     }
@@ -916,7 +916,7 @@ export class DatalatheAwsArgs extends BaseClient { // datalathe (https://github.
     
     return response
   }
-  awsAccount = async (): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L22)
+  awsAccount = async (): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L22)
     if (this._awsAccount) {
       return this._awsAccount
     }
@@ -930,7 +930,7 @@ export class DatalatheAwsArgs extends BaseClient { // datalathe (https://github.
     
     return response
   }
-  awsRegion = async (): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L22)
+  awsRegion = async (): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L22)
     if (this._awsRegion) {
       return this._awsRegion
     }
@@ -944,7 +944,7 @@ export class DatalatheAwsArgs extends BaseClient { // datalathe (https://github.
     
     return response
   }
-  awsRepo = async (): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L22)
+  awsRepo = async (): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L22)
     if (this._awsRepo) {
       return this._awsRepo
     }
@@ -958,7 +958,7 @@ export class DatalatheAwsArgs extends BaseClient { // datalathe (https://github.
     
     return response
   }
-  endpointUrl = async (): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L22)
+  endpointUrl = async (): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L22)
     if (this._endpointUrl) {
       return this._endpointUrl
     }
@@ -972,7 +972,7 @@ export class DatalatheAwsArgs extends BaseClient { // datalathe (https://github.
     
     return response
   }
-  secretAccessKey = async (): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L22)
+  secretAccessKey = async (): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L22)
     if (this._secretAccessKey) {
       return this._secretAccessKey
     }
@@ -986,7 +986,7 @@ export class DatalatheAwsArgs extends BaseClient { // datalathe (https://github.
     
     return response
   }
-  sessionToken = async (): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/1185fd71aec2b07a2f1329cf0d826c8f925fd335/dagger/src/index.ts#L22)
+  sessionToken = async (): Promise<string> => { // datalathe (https://github.com/DataLathe/datalathe-backend/tree/d94b5053b738c72edc7bd63f3417fdf832e504f5/dagger/src/index.ts#L22)
     if (this._sessionToken) {
       return this._sessionToken
     }

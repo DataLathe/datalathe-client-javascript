@@ -166,6 +166,82 @@ console.log(answer.explanation, answer.generatedSql, answer.data?.rows);
 | `getConfig()` / `updateConfig(config)` | Read / update profiler configuration |
 | `getSchemaMappings()` / `getSchema(request)` | Schema mapping inspection |
 
+## Chip resolution — find-or-create chips for reports
+
+`ChipResolver` automates the find-or-create chip workflow for reports. Given the tables a report needs (or SQL queries to parse), partition values, and a tag for tenant isolation, it searches for existing chips, creates only the missing ones in parallel (deduplicating concurrent requests for the same chip), and tags new chips so future runs find them. Create one resolver per application and share it — if two concurrent resolves both need the same chip, only one API call is made.
+
+| Method | Description |
+|---|---|
+| `new ChipResolver(client, options?)` | `options.timeoutMs` — per-chip creation timeout in ms (default: 10 minutes); `options.emptyRecheckMinutes` — how long an empty-source create failure is remembered before the resolver retries it (default: 30; 0 disables the cache) |
+| `resolve(reportQueries, partitionValues, tagKey, tagValue, factory, transform?)` | Extract table names from the SQL queries via `extractTables()` (transforming MySQL/MariaDB syntax first when `transform` is `true`), then resolve |
+| `resolveForTables(tables, partitionValues, tagKey, tagValue, factory)` | Resolve chips for known table names |
+| `inflightCount()` | Number of chip creations currently in flight |
+
+You supply a `ChipFactory` that tells the resolver which tables are partitioned (one chip per partition value, e.g. monthly snapshots) versus unpartitioned (one chip total, e.g. reference data), and how to build each chip's source — a `ChipSourceRequest`, which is a `SourceRequest` plus the `sourceType` to stage it as:
+
+```typescript
+import { ChipResolver, SourceType, type ChipFactory } from "@datalathe/client";
+
+const resolver = new ChipResolver(client);
+
+const factory: ChipFactory = {
+  isPartitioned: (table) => table === "orders",
+  buildSource: (table, partitionValue) => ({
+    sourceType: SourceType.MYSQL,
+    databaseName: "prod",
+    tableName: table,
+    query:
+      partitionValue === null
+        ? `SELECT * FROM ${table}`
+        : `SELECT * FROM ${table} WHERE month = '${partitionValue}'`,
+    partition:
+      partitionValue === null
+        ? undefined
+        : { partitionBy: "month", partitionValues: [partitionValue] },
+  }),
+};
+
+// From SQL — table names are extracted automatically
+const chips = await resolver.resolve(
+  ["SELECT u.name, o.total FROM users u JOIN orders o ON u.id = o.user_id"],
+  ["2026-01", "2026-02"],
+  "tenant", "42",
+  factory,
+);
+
+// Or from known table names
+const fromTables = await resolver.resolveForTables(
+  ["users", "orders"],
+  ["2026-01", "2026-02"],
+  "tenant", "42",
+  factory,
+);
+
+await client.queries.generateReport(chips.allChipIds(), [
+  "SELECT month, sum(total) AS total FROM orders GROUP BY month",
+]);
+```
+
+The result is a `ResolvedChips` with `unpartitionedIds` and `partitionedIds`; `allChipIds()` concatenates both. Resolution is incremental: the first run for a 13-month trend report creates all chips, subsequent runs find them via search and create nothing, and when the window slides forward a month only the single new chip per partitioned table is created.
+
+When a create fails because the source has no rows (the engine's `EMPTY_SOURCE` error code, or the older "No partitions to register" failure on engines that predate it), the resolver logs one info line and skips re-creating that chip on subsequent resolves until the `emptyRecheckMinutes` window elapses. A cached entry clears as soon as a create succeeds or a search finds a chip for that key.
+
+### Freshness tags
+
+Chips are snapshots of their source; by default the resolver serves a found chip forever. A factory can opt a table into staleness tracking by implementing the optional `freshnessTags(table)` hook, returning the tag entries the table's chips are expected to carry (or `null`/`undefined`/empty when its chips never go stale):
+
+```typescript
+const factory: ChipFactory = {
+  // ...isPartitioned and buildSource as above...
+  freshnessTags: (table) =>
+    table === "orders" ? { load_date: currentLoadDate } : null,
+};
+```
+
+When non-empty, the resolver stamps these tags on every chip it creates for the table (atomically with creation, alongside the tenant tag) and, on each resolve, deletes any existing chip whose tags are missing an entry or carry a different value — the replacement is created in the same pass. Semantics are equality-only by design: encode each staleness dimension as its own entry (e.g. a schema version, a load-generation date) and change the value when chips staged under the old value must be rebuilt.
+
+Caveats: the hook is called once per table on every resolve, so return precomputed values — dynamic values belong in the factory's constructor, computed once per request. A freshness tag key that collides with the tenant `tagKey` throws. A chip for the table created by any other writer without these tags is treated as stale and deleted, and on a partitioned table a value change evicts every partition's chip at once, so the next resolve re-stages all of them.
+
 ## Deprecated flat methods
 
 Earlier releases exposed everything directly on the client (`client.createChip(...)`, `client.generateReport(...)`, `client.listConnections(...)`, ...). These still work as thin aliases that forward to the namespaced methods above, but they are `@deprecated` — new code should use the namespaced API.

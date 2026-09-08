@@ -43,7 +43,7 @@ The API is grouped into namespaces on the client instance: `client.chips`, `clie
 
 | Method | Description |
 |---|---|
-| `getVersion()` | Engine version, e.g. `{ version: "1.15.0" }` |
+| `getVersion()` | Engine version, e.g. `{ version: "1.16.0" }` |
 | `getDatabases()` | Lists databases attached to the engine |
 | `getDatabaseSchema(databaseName)` | Table and column metadata for a database |
 | `getLicense()` / `putLicense(licenseKey)` | Read / install the engine license |

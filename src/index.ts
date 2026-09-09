@@ -38,7 +38,7 @@ export {
   type ConnectionRequest,
   type ConnectionResponse,
   type DatalatheClientOptions,
-  type DuckDBDatabase,
+  type DatabaseInfo,
   type DatabaseTable,
   type Chip,
   type ChipMetadata,

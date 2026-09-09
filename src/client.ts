@@ -20,7 +20,7 @@ import type {
   AiQueryRequest,
   AiQueryResponse,
   DatalatheClientOptions,
-  DuckDBDatabase,
+  DatabaseInfo,
   DatabaseTable,
   ChipsResponse,
   LicenseStatus,
@@ -57,8 +57,8 @@ export class DatalatheClient {
 
   // --- Database inspection ---
 
-  async getDatabases(): Promise<DuckDBDatabase[]> {
-    return this.http.get<DuckDBDatabase[]>("/lathe/stage/databases");
+  async getDatabases(): Promise<DatabaseInfo[]> {
+    return this.http.get<DatabaseInfo[]>("/lathe/stage/databases");
   }
 
   async getDatabaseSchema(databaseName: string): Promise<DatabaseTable[]> {

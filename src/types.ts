@@ -77,7 +77,7 @@ export interface ReportResponse {
   timing?: ReportTiming | null;
 }
 
-export interface DuckDBDatabase {
+export interface DatabaseInfo {
   databaseName: string;
   databaseOid: number;
   path?: string;

@@ -67,7 +67,7 @@ The API is grouped into namespaces on the client instance: `client.chips`, `clie
 | `list({ limit?, offset? })` | List chips with metadata and tags (paginated) |
 | `get(chipId)` | Fetch one chip; throws `ChipNotFoundError` when absent |
 | `search(tableName?, partitionValue?, tag?)` | Search chips by table, partition value, or `key:value` tag (e.g. `env:production`) |
-| `query(chipIds, query)` | Run one read-only SQL statement against the chips' raw catalogs (`s_<sub_chip_id>.main.<table>`, engine 1.11+); returns `{ columns, rows, truncated }`, capped by the engine's `max_result_rows` |
+| `query(chipIds, query)` | Run one read-only SQL statement against the chips' raw catalogs (`<sub_chip_id>.main.<table>`, hyphens → underscores, `s_`-prefixed when the id doesn't start with a letter; engine 1.11+); returns `{ columns, rows, truncated }`, capped by the engine's `max_result_rows` |
 | `addTags(chipId, tags)` / `deleteTag(chipId, key)` | Manage chip tags |
 | `delete(chipId)` | Delete a chip |
 

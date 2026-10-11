@@ -62,6 +62,7 @@ export class DatalatheClient {
    * unchanged; invalid ones also log a warning. Never throws.
    */
   withCorrelationId(id: string | null | undefined): DatalatheClient {
+    if (id != null && typeof id !== "string") id = String(id);
     if (!id || id.trim() === "") return this;
     if (!CORRELATION_ID_PATTERN.test(id)) {
       console.warn(

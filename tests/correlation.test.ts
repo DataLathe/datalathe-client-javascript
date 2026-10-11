@@ -65,3 +65,13 @@ describe("withCorrelationId", () => {
     expect((await client.chips.getIngestJob("j2")).correlationId).toBeUndefined();
   });
 });
+
+describe("withCorrelationId non-string input", () => {
+  it("never throws on non-string ids", async () => {
+    const { fetch, calls } = createMockFetch([{ status: 200, body: { version: "x" } }]);
+    const base = new DatalatheClient("http://engine", { fetch });
+    const scoped = base.withCorrelationId(12345 as unknown as string);
+    await scoped.getVersion();
+    expect(header(calls[0].init)).toBe("12345");
+  });
+});

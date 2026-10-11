@@ -33,6 +33,9 @@ import type {
 } from "./types.js";
 import { SourceType } from "./types.js";
 
+const CORRELATION_ID_HEADER = "X-Correlation-ID";
+const CORRELATION_ID_PATTERN = /^[A-Za-z0-9._:-]{1,128}$/;
+
 export class DatalatheClient {
   readonly chips: ChipsApi;
   readonly queries: QueriesApi;
@@ -41,13 +44,36 @@ export class DatalatheClient {
   readonly profiler: ProfilerApi;
   private readonly http: HttpClient;
 
-  constructor(baseUrl: string, options?: DatalatheClientOptions) {
-    this.http = new HttpClient(baseUrl, options);
+  /** @param http internal: lets `withCorrelationId` share a transport */
+  constructor(baseUrl: string, options?: DatalatheClientOptions, /** @internal */ http?: HttpClient) {
+    this.http = http ?? new HttpClient(baseUrl, options);
     this.chips = new ChipsApi(this.http);
     this.queries = new QueriesApi(this.http);
     this.connections = new ConnectionsApi(this.http);
     this.ai = new AiApi(this.http);
     this.profiler = new ProfilerApi(this.http);
+  }
+
+  /**
+   * A client that sends `X-Correlation-ID: id` on every request so the engine
+   * tags its logs, ingest jobs and chips with it. Shares this client's
+   * transport; cheap to create per request. Null, blank or invalid IDs
+   * (anything not matching `[A-Za-z0-9._:-]{1,128}`) return this client
+   * unchanged; invalid ones also log a warning. Never throws.
+   */
+  withCorrelationId(id: string | null | undefined): DatalatheClient {
+    if (!id || id.trim() === "") return this;
+    if (!CORRELATION_ID_PATTERN.test(id)) {
+      console.warn(
+        "datalathe: ignoring correlation ID that does not match [A-Za-z0-9._:-]{1,128}; the engine will generate one",
+      );
+      return this;
+    }
+    return new DatalatheClient(
+      this.http.baseUrl,
+      undefined,
+      this.http.withHeaders({ [CORRELATION_ID_HEADER]: id }),
+    );
   }
 
   /** Engine version, e.g. { version: "1.9.0" }. */

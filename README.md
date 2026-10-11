@@ -39,6 +39,17 @@ When the engine sheds load it returns HTTP 429 with a `Retry-After` header, havi
 
 The API is grouped into namespaces on the client instance: `client.chips`, `client.queries`, `client.connections`, `client.ai`, and `client.profiler`, plus a few top-level methods.
 
+### Correlation IDs
+
+```ts
+const scoped = client.withCorrelationId(requestId);
+await scoped.chips.create(/* ... */);
+```
+
+The copy shares the client's transport, so create one per request. Valid IDs
+match `[A-Za-z0-9._:-]{1,128}`; null, blank or invalid IDs leave requests
+untagged and never throw. Ingest jobs and chip metadata expose `correlationId`.
+
 ## Top-level methods
 
 | Method | Description |

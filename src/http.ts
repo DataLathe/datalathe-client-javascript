@@ -64,6 +64,16 @@ export class HttpClient {
       options?.retryOn429 === false ? 0 : options?.maxRetries ?? 3;
   }
 
+  /** A transport that adds `extra` to every request and shares this one's fetch and settings. */
+  withHeaders(extra: Record<string, string>): HttpClient {
+    return new HttpClient(this.baseUrl, {
+      fetch: this.fetchFn,
+      headers: { ...this.defaultHeaders, ...extra },
+      timeout: this.timeout,
+      maxRetries: this.maxRetries,
+    });
+  }
+
   /**
    * Runs a fetch with the per-attempt timeout, replaying on HTTP 429 (the
    * engine's admission gates reject before doing any work, so replay is safe

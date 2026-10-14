@@ -117,6 +117,7 @@ export interface ChipMetadata {
   storageKeyPrefix?: string;
   ttlDays?: number;
   partitionColumn?: string;
+  correlationId?: string | null;
 }
 
 export interface ChipTag {
@@ -337,6 +338,7 @@ export interface IngestJob {
   error?: string | null;
   createdAt?: number | null;
   updatedAt?: number | null;
+  correlationId?: string | null;
 }
 
 // Raw chip query types

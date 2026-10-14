@@ -75,3 +75,14 @@ describe("withCorrelationId non-string input", () => {
     expect(header(calls[0].init)).toBe("12345");
   });
 });
+
+describe("base URL normalization", () => {
+  it("strips any number of trailing slashes, and is linear on long inputs", async () => {
+    const { fetch, calls } = createMockFetch([{ status: 200, body: { version: "x" } }]);
+    await new DatalatheClient("http://engine///", { fetch }).getVersion();
+    expect(calls[0].url).toBe("http://engine/lathe/version");
+    const start = Date.now();
+    new DatalatheClient("http://engine" + "/".repeat(200_000) + "x", { fetch });
+    expect(Date.now() - start).toBeLessThan(1000);
+  });
+});

@@ -56,7 +56,9 @@ export class HttpClient {
   private readonly maxRetries: number;
 
   constructor(baseUrl: string, options?: DatalatheClientOptions) {
-    this.baseUrl = baseUrl.replace(/\/+$/, "");
+    let end = baseUrl.length;
+    while (end > 0 && baseUrl.charCodeAt(end - 1) === 47 /* "/" */) end--;
+    this.baseUrl = baseUrl.slice(0, end);
     this.fetchFn = options?.fetch ?? globalThis.fetch.bind(globalThis);
     this.defaultHeaders = options?.headers ?? {};
     this.timeout = options?.timeout ?? 30_000;

@@ -54,7 +54,7 @@ untagged and never throw. Ingest jobs and chip metadata expose `correlationId`.
 
 | Method | Description |
 |---|---|
-| `getVersion()` | Engine version, e.g. `{ version: "1.16.0" }` |
+| `getVersion()` | Engine version, e.g. `{ version: "1.20.0" }` |
 | `getDatabases()` | Lists databases attached to the engine |
 | `getDatabaseSchema(databaseName)` | Table and column metadata for a database |
 | `getLicense()` / `putLicense(licenseKey)` | Read / install the engine license |

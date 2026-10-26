@@ -377,7 +377,7 @@ describe("DatalatheClient", () => {
         database_name: "system",
         database_oid: 2,
         internal: true,
-        type: "duckdb",
+        type: "datalathe",
         readonly: true,
       },
     ];

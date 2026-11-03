@@ -191,8 +191,13 @@ export class DatalatheClient {
   }
 
   /** @deprecated Use client.chips.search() */
-  async searchChips(tableName?: string, partitionValue?: string, tag?: string): Promise<ChipsResponse> {
-    return this.chips.search(tableName, partitionValue, tag);
+  async searchChips(
+    tableName?: string,
+    partitionValue?: string,
+    tag?: string,
+    correlationId?: string,
+  ): Promise<ChipsResponse> {
+    return this.chips.search(tableName, partitionValue, tag, correlationId);
   }
 
   /** @deprecated Use client.chips.addTags() */

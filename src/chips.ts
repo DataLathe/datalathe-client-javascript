@@ -302,15 +302,22 @@ export class ChipsApi {
     );
   }
 
+  /**
+   * Searches chips by table, partition value, `key:value` tag, or the
+   * correlation ID the creating request carried (engine 1.21.0+; older
+   * engines ignore the parameter and return the unfiltered match).
+   */
   async search(
     tableName?: string,
     partitionValue?: string,
     tag?: string,
+    correlationId?: string,
   ): Promise<ChipsResponse> {
     const params = new URLSearchParams();
     if (tableName !== undefined) params.set("table_name", tableName);
     if (partitionValue !== undefined) params.set("partition_value", partitionValue);
     if (tag !== undefined) params.set("tag", tag);
+    if (correlationId !== undefined) params.set("correlation_id", correlationId);
     const query = params.toString();
     const path = `/lathe/chips/search${query ? `?${query}` : ""}`;
     return this.http.get<ChipsResponse>(path);

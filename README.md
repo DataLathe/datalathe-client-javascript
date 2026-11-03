@@ -49,6 +49,10 @@ await scoped.chips.create(/* ... */);
 The copy shares the client's transport, so create one per request. Valid IDs
 match `[A-Za-z0-9._:-]{1,128}`; null, blank or invalid IDs leave requests
 untagged and never throw. Ingest jobs and chip metadata expose `correlationId`.
+`client.chips.search(undefined, undefined, undefined, requestId)` lists the
+chips a request created, and `listIngestJobs()` entries carry the ID, so one
+value traces a request through your logs, the engine's logs, its jobs and its
+chips.
 
 ## Top-level methods
 
@@ -77,7 +81,7 @@ untagged and never throw. Ingest jobs and chip metadata expose `correlationId`.
 | `resumeIngestJob(jobId)` | Resume a failed, checkpointed ingest job |
 | `list({ limit?, offset? })` | List chips with metadata and tags (paginated) |
 | `get(chipId)` | Fetch one chip; throws `ChipNotFoundError` when absent |
-| `search(tableName?, partitionValue?, tag?)` | Search chips by table, partition value, or `key:value` tag (e.g. `env:production`) |
+| `search(tableName?, partitionValue?, tag?, correlationId?)` | Search chips by table, partition value, `key:value` tag (e.g. `env:production`), or the correlation ID they were created under (engine 1.21.0+) |
 | `query(chipIds, query)` | Run one read-only SQL statement against the chips' raw catalogs (`<sub_chip_id>.main.<table>`, hyphens → underscores, `s_`-prefixed when the id doesn't start with a letter; engine 1.11+); returns `{ columns, rows, truncated }`, capped by the engine's `max_result_rows` |
 | `addTags(chipId, tags)` / `deleteTag(chipId, key)` | Manage chip tags |
 | `delete(chipId)` | Delete a chip |

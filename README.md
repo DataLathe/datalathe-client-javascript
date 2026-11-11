@@ -32,10 +32,12 @@ console.log(results.get(0)?.result);
 - `options.fetch` — Custom fetch implementation
 - `options.headers` — Default headers for all requests
 - `options.timeout` — Request timeout in ms (default: 30000). Chip creation can take minutes for large datasets; raise this (e.g. `600000`) when creating chips synchronously.
-- `options.retryOn429` — Retry requests rejected with HTTP 429 (default: `true`)
-- `options.maxRetries` — Maximum number of 429 retries after the initial attempt (default: `3`)
+- `options.retryOn429` — Retry requests rejected with HTTP 429, or with HTTP 503 and a `Retry-After` of at most 30 seconds (default: `true`)
+- `options.maxRetries` — Maximum number of retries after the initial attempt, shared by 429 and 503 responses (default: `3`)
 
 When the engine sheds load it returns HTTP 429 with a `Retry-After` header, having done no work on the request, so the client transparently retries 429 responses for every method (up to 3 attempts by default, honoring `Retry-After`, with exponential backoff when the header is absent). Network errors are never retried. If retries are exhausted, the final 429 surfaces as a normal `DatalatheApiError`.
+
+The client retries an HTTP 503 the same way, under the same retry budget, only when the response carries a `Retry-After` header with a whole number of seconds from 0 through 30. An engine that is shutting down during a deploy answers new ingest requests with such a 503 (`SHUTTING_DOWN`, `Retry-After: 5`) before doing any work, and the retry reaches the replacement engine. A 503 with a longer `Retry-After` (for example `LICENSE_UNAVAILABLE`, `Retry-After: 60`), a value that isn't a whole number of seconds, or no `Retry-After` header surfaces at once as a `DatalatheApiError`. Setting `retryOn429: false` or `maxRetries: 0` turns off both kinds of retry.
 
 The API is grouped into namespaces on the client instance: `client.chips`, `client.queries`, `client.connections`, `client.ai`, and `client.profiler`, plus a few top-level methods.
 

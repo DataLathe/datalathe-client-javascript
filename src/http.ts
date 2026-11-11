@@ -45,6 +45,13 @@ function retryDelayMs(retryAfter: string | null, attempt: number): number {
   return Math.min(seconds, 30) * 1000 + Math.random() * 250;
 }
 
+function isRetryable(response: Response): boolean {
+  if (response.status === 429) return true;
+  if (response.status !== 503) return false;
+  const retryAfter = response.headers.get("retry-after")?.trim() ?? "";
+  return /^\d+$/.test(retryAfter) && Number(retryAfter) <= 30;
+}
+
 /**
  * Internal HTTP transport shared by all sub-modules.
  */
@@ -77,10 +84,12 @@ export class HttpClient {
   }
 
   /**
-   * Runs a fetch with the per-attempt timeout, replaying on HTTP 429 (the
-   * engine's admission gates reject before doing any work, so replay is safe
-   * for every method). Waits honor Retry-After, capped at 30s, falling back
-   * to exponential backoff when the header is absent.
+   * Runs a fetch with the per-attempt timeout, replaying on HTTP 429 and on
+   * HTTP 503 with a Retry-After of at most 30 seconds (the engine rejects
+   * both before doing any work, so replay is safe for every method). A 503
+   * with a longer, missing, or unparseable Retry-After is returned at once.
+   * Waits honor Retry-After, capped at 30s; a 429 without the header falls
+   * back to exponential backoff.
    */
   private async fetchWithRetry(url: string, init: RequestInit): Promise<Response> {
     for (let attempt = 0; ; attempt++) {
@@ -93,7 +102,7 @@ export class HttpClient {
         clearTimeout(timeoutId);
       }
 
-      if (response.status !== 429 || attempt >= this.maxRetries) {
+      if (!isRetryable(response) || attempt >= this.maxRetries) {
         return response;
       }
 

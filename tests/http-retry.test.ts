@@ -133,3 +133,130 @@ describe("HttpClient 429 retry", () => {
     expect(fake.calls()).toBe(2);
   });
 });
+
+function unavailable(retryAfter?: string): () => Response {
+  const headers: Record<string, string> =
+    retryAfter === undefined ? {} : { "retry-after": retryAfter };
+  return () => new Response("draining", { status: 503, headers });
+}
+
+describe("HttpClient 503 retry", () => {
+  it("retries a 503 with a short Retry-After and succeeds", async () => {
+    vi.useFakeTimers();
+    const fake = fetchSequence(unavailable("5"), ok());
+    const http = new HttpClient("http://x", { fetch: fake.fn });
+
+    const start = Date.now();
+    const promise = http.postRaw<{ version: string }>("/lathe/stage/data", {});
+    await vi.runAllTimersAsync();
+
+    expect(await promise).toEqual({ version: "1.0.0" });
+    expect(fake.calls()).toBe(2);
+    const elapsed = Date.now() - start;
+    expect(elapsed).toBeGreaterThanOrEqual(5000);
+    expect(elapsed).toBeLessThanOrEqual(5250);
+  });
+
+  it("retries a 503 with Retry-After: 30", async () => {
+    vi.useFakeTimers();
+    const fake = fetchSequence(unavailable("30"), ok());
+    const http = new HttpClient("http://x", { fetch: fake.fn });
+
+    const promise = http.get<{ version: string }>("/lathe/version");
+    await vi.runAllTimersAsync();
+
+    expect(await promise).toEqual({ version: "1.0.0" });
+    expect(fake.calls()).toBe(2);
+  });
+
+  it.each(["31", "60"])("does not retry a 503 with Retry-After: %s", async (retryAfter) => {
+    const fake = fetchSequence(unavailable(retryAfter), ok());
+    const http = new HttpClient("http://x", { fetch: fake.fn });
+
+    const error = await http.postRaw("/lathe/stage/data", {}).catch((e) => e);
+
+    expect(error).toBeInstanceOf(DatalatheApiError);
+    expect(error.statusCode).toBe(503);
+    expect(error.responseBody).toBe("draining");
+    expect(fake.calls()).toBe(1);
+  });
+
+  it("does not retry a 503 without Retry-After", async () => {
+    const fake = fetchSequence(unavailable(), ok());
+    const http = new HttpClient("http://x", { fetch: fake.fn });
+
+    const error = await http.get("/lathe/version").catch((e) => e);
+
+    expect(error).toBeInstanceOf(DatalatheApiError);
+    expect(error.statusCode).toBe(503);
+    expect(error.responseBody).toBe("draining");
+    expect(fake.calls()).toBe(1);
+  });
+
+  it.each(["", "soon", "1.5", "-1", "1e1", "Wed, 11 Nov 2026 07:28:00 GMT"])(
+    "does not retry a 503 with unparseable Retry-After: %j",
+    async (retryAfter) => {
+      const fake = fetchSequence(unavailable(retryAfter), ok());
+      const http = new HttpClient("http://x", { fetch: fake.fn });
+
+      await expect(http.get("/lathe/version")).rejects.toMatchObject({
+        statusCode: 503,
+      });
+      expect(fake.calls()).toBe(1);
+    },
+  );
+
+  it("does not retry a 503 when retryOn429 is false", async () => {
+    const fake = fetchSequence(unavailable("0"), ok());
+    const http = new HttpClient("http://x", { fetch: fake.fn, retryOn429: false });
+
+    await expect(http.get("/lathe/version")).rejects.toMatchObject({
+      statusCode: 503,
+    });
+    expect(fake.calls()).toBe(1);
+  });
+
+  it("does not retry a 503 when maxRetries is 0", async () => {
+    const fake = fetchSequence(unavailable("0"), ok());
+    const http = new HttpClient("http://x", { fetch: fake.fn, maxRetries: 0 });
+
+    await expect(http.get("/lathe/version")).rejects.toMatchObject({
+      statusCode: 503,
+    });
+    expect(fake.calls()).toBe(1);
+  });
+
+  it("throws DatalatheApiError with status 503 after four attempts", async () => {
+    vi.useFakeTimers();
+    const fake = fetchSequence(unavailable("5"));
+    const http = new HttpClient("http://x", { fetch: fake.fn });
+
+    const promise = http.postRaw("/lathe/stage/data", {}).catch((e) => e);
+    await vi.runAllTimersAsync();
+    const error = await promise;
+
+    expect(error).toBeInstanceOf(DatalatheApiError);
+    expect(error.statusCode).toBe(503);
+    expect(fake.calls()).toBe(4);
+  });
+
+  it("shares one attempt budget between 429 and 503", async () => {
+    vi.useFakeTimers();
+    const fake = fetchSequence(
+      tooMany("0"),
+      unavailable("0"),
+      tooMany("0"),
+      unavailable("0"),
+      ok(),
+    );
+    const http = new HttpClient("http://x", { fetch: fake.fn });
+
+    const promise = http.get("/lathe/version").catch((e) => e);
+    await vi.runAllTimersAsync();
+    const error = await promise;
+
+    expect(error).toBeInstanceOf(DatalatheApiError);
+    expect(error.statusCode).toBe(503);
+    expect(fake.calls()).toBe(4);
+  });
+});

@@ -1,5 +1,6 @@
 import { HttpClient } from "./http.js";
 import { ChipsApi } from "./chips.js";
+import { SeriesApi } from "./series.js";
 import { QueriesApi, type GenerateReportResult } from "./queries.js";
 import { ConnectionsApi } from "./connections.js";
 import { AiApi } from "./ai.js";
@@ -38,6 +39,7 @@ const CORRELATION_ID_PATTERN = /^[A-Za-z0-9._:-]{1,128}$/;
 
 export class DatalatheClient {
   readonly chips: ChipsApi;
+  readonly series: SeriesApi;
   readonly queries: QueriesApi;
   readonly connections: ConnectionsApi;
   readonly ai: AiApi;
@@ -48,6 +50,7 @@ export class DatalatheClient {
   constructor(baseUrl: string, options?: DatalatheClientOptions, /** @internal */ http?: HttpClient) {
     this.http = http ?? new HttpClient(baseUrl, options);
     this.chips = new ChipsApi(this.http);
+    this.series = new SeriesApi(this.http);
     this.queries = new QueriesApi(this.http);
     this.connections = new ConnectionsApi(this.http);
     this.ai = new AiApi(this.http);

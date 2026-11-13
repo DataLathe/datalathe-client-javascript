@@ -38,5 +38,5 @@ jobs:
           DAGGER_CLOUD_ENGINE: "1"
           DAGGER_CLOUD_TOKEN: ${{ secrets.DAGGER_CLOUD_TOKEN }}
           CROSS_REPO_TOKEN: ${{ secrets.CROSS_REPO_TOKEN }}
-          BACKEND_MODULE: github.com/DataLathe/datalathe-backend/dagger@5369de6a2a87a18c8c1cca1c0345772e570d9272
+          BACKEND_MODULE: github.com/DataLathe/datalathe-backend/dagger@339b96277adf2dcdc79ab47f5f613757a145f44c
         run: .github/scripts/dagger-retry.sh -m "$BACKEND_MODULE" call integration-js --js-client=.

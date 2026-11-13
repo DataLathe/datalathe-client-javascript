@@ -102,6 +102,36 @@ const job = await client.chips.waitForIngest(jobId, { timeoutMs: 1800000 });
 console.log(job.rowsIngested);
 ```
 
+## `client.series` — read chip collections
+
+A series is a named collection that holds the current chip for each table and
+partition, for example every chip of one tenant. Requires engine 1.24.0 or
+later with a chip manager.
+
+```ts
+const { series } = await client.series.list({ prefix: "12" });
+
+const view = await client.series.slots("1234");
+for (const table of view.tables) {
+  console.log(table.tableName, table.slots.length);
+}
+
+const result = await client.queries.generateReport(
+  [client.series.reference("1234")],
+  ["SELECT COUNT(*) FROM loan04"],
+);
+```
+
+| Method | Description |
+|---|---|
+| `list({ prefix, limit, cursor })` | Lists series by ID. Pass `nextCursor` back as `cursor` for the next page. |
+| `slots(seriesId, { at, major, table, partition, tables })` | Returns each table's contract columns and the chip that holds each partition. |
+| `reference(seriesId, { table, partition, major, at })` | Builds the reference that a report, AI, or chip query accepts in place of a chip ID. |
+
+`slots` returns an `asOf` token. Pass it as `at`, to `slots` or to `reference`,
+to read exactly that state later. The call fails if a chip in that view was
+deleted or expired in the meantime.
+
 ## `client.queries` — run SQL against chips
 
 | Method | Description |

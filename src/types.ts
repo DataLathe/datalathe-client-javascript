@@ -554,3 +554,73 @@ export interface AgentResponse {
   errorCode?: string;
   chipId?: string;
 }
+
+export interface SeriesListOptions {
+  /** Only series whose ID starts with this text. */
+  prefix?: string;
+  /** Page size. Default 100, maximum 1000. */
+  limit?: number;
+  /** `nextCursor` of the previous page. */
+  cursor?: string;
+}
+
+export interface SeriesSummary {
+  seriesId: string;
+  /** Token for the series' current state. Pass it as `at` to read this state later. */
+  asOf: string;
+  revision: number;
+  tables: number;
+  liveSlotEntries: number;
+  /** Unix seconds. */
+  lastPublishedAt?: number | null;
+}
+
+export interface SeriesListResponse {
+  series: SeriesSummary[];
+  nextCursor?: string;
+}
+
+export interface SeriesSlotsOptions {
+  /** `latest` (default) or an `asOf` token. */
+  at?: string;
+  /** Use each table's highest contract major that is this value or lower. */
+  major?: number;
+  table?: string;
+  partition?: string;
+  tables?: string[];
+}
+
+export interface SeriesSlot {
+  /** Empty for an unpartitioned table. */
+  partitionValue: string;
+  chipId: string;
+  subChipId: string;
+  version: number;
+  /** How many of the table's `columns` this slot holds. */
+  columnCount?: number | null;
+  publishedRevision: number;
+}
+
+export interface SeriesTable {
+  tableName: string;
+  contractMajor: number;
+  /** `[name, type]` pairs in order. */
+  columns: [string, string][];
+  slots: SeriesSlot[];
+}
+
+export interface SeriesSlotsResponse {
+  seriesId: string;
+  asOf: string;
+  revision: number;
+  tables: SeriesTable[];
+}
+
+export interface SeriesReferenceOptions {
+  table?: string;
+  /** Needs `table`. */
+  partition?: string;
+  major?: number;
+  /** `latest` (default) or an `asOf` token. */
+  at?: string;
+}

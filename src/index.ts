@@ -1,5 +1,6 @@
 export { DatalatheClient } from "./client.js";
 export { ChipsApi } from "./chips.js";
+export { SeriesApi } from "./series.js";
 export { QueriesApi, type GenerateReportResult } from "./queries.js";
 export { ConnectionsApi } from "./connections.js";
 export { AiApi, AiConversation } from "./ai.js";
@@ -50,6 +51,14 @@ export {
   type IngestJob,
   type ChipQueryColumn,
   type ChipQueryResult,
+  type SeriesListOptions,
+  type SeriesSummary,
+  type SeriesListResponse,
+  type SeriesSlotsOptions,
+  type SeriesSlot,
+  type SeriesTable,
+  type SeriesSlotsResponse,
+  type SeriesReferenceOptions,
   type ProfilerTable,
   type ModelerConfig,
   type TyperConfig,
